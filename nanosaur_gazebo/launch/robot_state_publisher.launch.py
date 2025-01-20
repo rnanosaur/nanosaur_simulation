@@ -33,18 +33,18 @@ from launch_ros.actions import Node
 from launch.substitutions import Command
 
 
-def launch_setup(context: LaunchContext, support_package):
+def launch_setup(context: LaunchContext, support_robot_name, support_camera_type, support_lidar_type):
     """ Reference:
         https://answers.ros.org/question/396345/ros2-launch-file-how-to-convert-launchargument-to-string/ 
         https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_moveit_config/launch/ur_moveit.launch.py
     """
     # render namespace, dumping the support_package.
-    namespace = context.perform_substitution(support_package)
+    robot_name = context.perform_substitution(support_robot_name)
+    camera_type = context.perform_substitution(support_camera_type)
+    lidar_type = context.perform_substitution(support_lidar_type)
 
     use_sim_time = LaunchConfiguration('use_sim_time')
     xacro_path = LaunchConfiguration('xacro_path')
-    head_type = LaunchConfiguration('head_type')
-    flap_type = LaunchConfiguration('flap_type')
     # Add option to publish pointcloud
     publish_pointcloud = "False"
 
@@ -52,15 +52,15 @@ def launch_setup(context: LaunchContext, support_package):
     robot_state_publisher_node = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
-        namespace=namespace,
+        namespace=robot_name,
         parameters=[{'use_sim_time': use_sim_time,
                     # 'frame_prefix': f"{namespace}/", # Reimplemented https://github.com/ros/robot_state_publisher/pull/169
                     'robot_description': Command(
                         [
                             'xacro ', xacro_path, ' ',
-                            'robot_name:=', namespace, ' ',
-                            'head_type:=', head_type, ' ',
-                            'flap_type:=', flap_type, ' ',
+                            'robot_name:=', robot_name, ' ',
+                            'camera_type:=', camera_type, ' ',
+                            'lidar_type:=', lidar_type, ' ',
                             'publish_pointcloud:=', publish_pointcloud, ' ',
                         ])
                     }]
@@ -71,7 +71,9 @@ def launch_setup(context: LaunchContext, support_package):
 
 def generate_launch_description():
     package_gazebo = get_package_share_directory('nanosaur_gazebo')
-    namespace = LaunchConfiguration('namespace')
+    robot_name = LaunchConfiguration('robot_name')
+    camera_type = LaunchConfiguration('camera_type')
+    lidar_type = LaunchConfiguration('lidar_type')
 
     use_sim_time_cmd = DeclareLaunchArgument(
         name='use_sim_time',
@@ -79,19 +81,19 @@ def generate_launch_description():
         description='Use simulation (Gazebo) clock if true')
 
     nanosaur_cmd = DeclareLaunchArgument(
-        name='namespace',
+        name='robot_name',
         default_value='nanosaur',
-        description='nanosaur namespace name. If you are working with multiple robot you can change this namespace.')
+        description='robot name (namespace). If you are working with multiple robot you can change this parameter.')
 
-    declare_head_type_cmd = DeclareLaunchArgument(
-        name='head_type',
-        default_value='realsense',
-        description='Head type to use. Options: empty, Realsense, zed.')
-
-    declare_flap_type_cmd = DeclareLaunchArgument(
-        name='flap_type',
+    declare_camera_type_cmd = DeclareLaunchArgument(
+        name='camera_type',
         default_value='empty',
-        description='Flap type to use. Options: empty, LD06.')
+        description='camera type to use. Options: empty, Realsense, zed.')
+
+    declare_lidar_type_cmd = DeclareLaunchArgument(
+        name='lidar_type',
+        default_value='empty',
+        description='Lidar type to use. Options: empty, LD06.')
 
     # full  path to urdf and world file
     # world = os.path.join(nanosaur_simulations, "worlds", world_file_name)
@@ -106,10 +108,10 @@ def generate_launch_description():
     ld = LaunchDescription()
     ld.add_action(use_sim_time_cmd)
     ld.add_action(nanosaur_cmd)
-    ld.add_action(declare_head_type_cmd)
-    ld.add_action(declare_flap_type_cmd)
+    ld.add_action(declare_camera_type_cmd)
+    ld.add_action(declare_lidar_type_cmd)
     ld.add_action(declare_model_path_cmd)
-    ld.add_action(OpaqueFunction(function=launch_setup, args=[namespace]))
+    ld.add_action(OpaqueFunction(function=launch_setup, args=[robot_name, camera_type, lidar_type]))
 
     return ld
 # EOF

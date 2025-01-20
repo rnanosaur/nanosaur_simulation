@@ -129,11 +129,6 @@ def generate_launch_description():
         default_value='true',
         description='Use simulation (Gazebo) clock if true')
 
-    nanosaur_cmd = DeclareLaunchArgument(
-        name='namespace',
-        default_value='nanosaur',
-        description='nanosaur namespace name. If you are working with multiple robot you can change this namespace.')
-
     world_name_cmd = DeclareLaunchArgument(
         name='world_name',
         default_value=default_world_name,
@@ -142,7 +137,6 @@ def generate_launch_description():
     ld = LaunchDescription()
     ld.add_action(ign_resource_path)
     ld.add_action(use_sim_time_cmd)
-    ld.add_action(nanosaur_cmd)
     ld.add_action(world_name_cmd)
     ld.add_action(OpaqueFunction(function=launch_gazebo_setup, args=[world_name]))
 

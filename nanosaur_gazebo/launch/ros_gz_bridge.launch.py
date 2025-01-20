@@ -37,12 +37,12 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.conditions import LaunchConfigurationEquals
 
 
-def launch_gz_bridge_setup(context: LaunchContext, support_use_sim_time, support_namespace, support_world_name):
+def launch_gz_bridge_setup(context: LaunchContext, support_use_sim_time, support_robot_name, support_world_name):
 
     use_sim_time = context.perform_substitution(support_use_sim_time)
     # Cast in boolean
     use_sim_time = use_sim_time.lower() in ("true", "1", "yes", "on")
-    namespace = context.perform_substitution(support_namespace)
+    robot_name = context.perform_substitution(support_robot_name)
     world_name = context.perform_substitution(support_world_name)
     
     scan_bridge = Node(
@@ -72,14 +72,14 @@ def launch_gz_bridge_setup(context: LaunchContext, support_use_sim_time, support
         executable='parameter_bridge',
         name='cmd_vel_bridge',
         output='screen',
-        namespace=namespace,
+        namespace=robot_name,
         parameters=[{'use_sim_time': use_sim_time}],
-        arguments=[f'/model/{namespace}/cmd_vel@geometry_msgs/msg/Twist@ignition.msgs.Twist',
-                    f'/world/{world_name}/model/{namespace}/joint_state@sensor_msgs/msg/JointState[ignition.msgs.Model',
+        arguments=[f'/model/{robot_name}/cmd_vel@geometry_msgs/msg/Twist@ignition.msgs.Twist',
+                    f'/world/{world_name}/model/{robot_name}/joint_state@sensor_msgs/msg/JointState[ignition.msgs.Model',
                     ],
         remappings=[
-            (f'/model/{namespace}/cmd_vel', 'cmd_vel'),
-            (f'/world/{world_name}/model/{namespace}/joint_state', 'joint_states'),
+            (f'/model/{robot_name}/cmd_vel', 'cmd_vel'),
+            (f'/world/{world_name}/model/{robot_name}/joint_state', 'joint_states'),
         ]
         )
 
@@ -110,7 +110,7 @@ def launch_gz_bridge_setup(context: LaunchContext, support_use_sim_time, support
     camera_group = GroupAction(
         actions=[
             # push-ros-namespace to set namespace of included nodes
-            PushRosNamespace(namespace),
+            PushRosNamespace(robot_name),
             # nanosaur cameras
             realsense_bridge
         ]
@@ -126,7 +126,7 @@ def generate_launch_description():
     ##############################àworld_name = "lab"
     head_type = LaunchConfiguration('head_type')
     flap_type = LaunchConfiguration('flap_type')
-    namespace = LaunchConfiguration('namespace')
+    robot_name = LaunchConfiguration('robot_name')
 
     use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
@@ -139,13 +139,13 @@ def generate_launch_description():
         description='Name of the world you are loading')
 
     nanosaur_cmd = DeclareLaunchArgument(
-        name='namespace',
+        name='robot_name',
         default_value='nanosaur',
-        description='nanosaur namespace name. If you are working with multiple robot you can change this namespace.')
+        description='robot name (namespace). If you are working with multiple robot you can change this parameter.')
 
     declare_head_type_cmd = DeclareLaunchArgument(
         name='head_type',
-        default_value='realsense',
+        default_value='empty',
         description='Head type to use. Options: empty, Realsense, zed.')
 
     declare_flap_type_cmd = DeclareLaunchArgument(
@@ -159,7 +159,7 @@ def generate_launch_description():
     twist_control_launch = GroupAction(
         actions=[
             # push-ros-namespace to set namespace of included nodes
-            PushRosNamespace(namespace),
+            PushRosNamespace(robot_name),
             # nanosaur twist launch
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource([pkg_control, '/launch/twist_control.launch.py']))
@@ -172,7 +172,7 @@ def generate_launch_description():
     ld.add_action(declare_head_type_cmd)
     ld.add_action(declare_flap_type_cmd)
     ld.add_action(nanosaur_cmd)
-    ld.add_action(OpaqueFunction(function=launch_gz_bridge_setup, args=[use_sim_time, namespace, world_name]))
+    ld.add_action(OpaqueFunction(function=launch_gz_bridge_setup, args=[use_sim_time, robot_name, world_name]))
     ld.add_action(twist_control_launch)
 
     return ld

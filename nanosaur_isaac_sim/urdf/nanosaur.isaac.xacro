@@ -9,15 +9,15 @@
 
     <xacro:arg name="robot_name" default="nanosaur" />
     <!-- camera definitions -->
-    <xacro:arg name="head_type" default="empty" /> <!--options: empty, realsense, zedmini -->
-    <xacro:arg name="flap_type" default="empty" /> <!--options: empty, LD06 -->
-    <xacro:property name="cover_type_name" value="$(arg head_type)" />
+    <xacro:arg name="camera_type" default="empty" /> <!--options: empty, realsense, zedmini -->
+    <xacro:arg name="lidar_type" default="empty" /> <!--options: empty, LD06 -->
+    <xacro:property name="camera_type_name" value="$(arg camera_type)" />
 
     <xacro:arg name="publish_pointcloud"  default="false"/>
 
     <xacro:nanosaur
-            head_type="$(arg head_type)"
-            flap_type="$(arg flap_type)"
+            camera_type="$(arg camera_type)"
+            lidar_type="$(arg lidar_type)"
             use_nominal_extrinsics="true" />
 
     <!-- nanosaur mecanum wheel drive controller -->
@@ -29,7 +29,7 @@
             wheel_separation="${nanosaur_wheel_separation}" />
 
     <!-- Nanosaur sensors -->
-    <xacro:if value="${cover_type_name == 'realsense'}">
+    <xacro:if value="${camera_type_name == 'realsense'}">
         <xacro:realsense_camera
                 parent_name="camera_board"
                 sensor_name="camera"

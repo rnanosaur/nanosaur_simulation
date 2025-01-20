@@ -81,14 +81,16 @@ def load_robot_position(config, world_file_name):
     return Coordinate(config)
 
 
-def launch_gazebo_setup(context: LaunchContext, support_namespace, support_world):
+def launch_gazebo_setup(context: LaunchContext, support_robot_name, support_camera_type, support_lidar_type, support_world):
     """ Reference:
         https://answers.ros.org/question/396345/ros2-launch-file-how-to-convert-launchargument-to-string/ 
         https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_moveit_config/launch/ur_moveit.launch.py
     """
     package_worlds = get_package_share_directory('nanosaur_worlds')
     # render namespace, dumping the support_package.
-    namespace = context.perform_substitution(support_namespace)
+    robot_name = context.perform_substitution(support_robot_name)
+    camera_type = context.perform_substitution(support_camera_type)
+    lidar_type = context.perform_substitution(support_lidar_type)
     world_name = f'{context.perform_substitution(support_world)}.sdf'
 
     # Load configuration from params
@@ -97,9 +99,9 @@ def launch_gazebo_setup(context: LaunchContext, support_namespace, support_world
         package='ros_gz_sim',
         executable='create',
         output='screen',
-        namespace=namespace,
+        namespace=robot_name,
         arguments=['-topic', 'robot_description',
-                   '-name', namespace,
+                   '-name', robot_name,
                    '-allow_renaming', 'true',
                    '-x', conf.x, '-y', conf.y, '-z',conf.z,
                    '-R', conf.R, '-P', conf.P, '-Y',conf.Y,
@@ -115,7 +117,9 @@ def generate_launch_description():
     default_world_name = 'lab' # Empty world: empty
 
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
-    namespace = LaunchConfiguration('namespace', default="nanosaur")
+    robot_name = LaunchConfiguration('robot_name', default="nanosaur")
+    camera_type = LaunchConfiguration('camera_type', default='empty')
+    lidar_type = LaunchConfiguration('lidar_type', default='empty')
     world_name = LaunchConfiguration('world_name', default=default_world_name)
     
     launch_file_dir = os.path.join(package_gazebo, 'launch')
@@ -126,9 +130,19 @@ def generate_launch_description():
         description='Use simulation (Gazebo) clock if true')
 
     nanosaur_cmd = DeclareLaunchArgument(
-        name='namespace',
+        name='robot_name',
         default_value='nanosaur',
-        description='nanosaur namespace name. If you are working with multiple robot you can change this namespace.')
+        description='robot name (namespace). If you are working with multiple robot you can change this parameter.')
+
+    declare_camera_type_cmd = DeclareLaunchArgument(
+        name='camera_type',
+        default_value='empty',
+        description='camera type to use. Options: empty, Realsense, zed.')
+
+    declare_lidar_type_cmd = DeclareLaunchArgument(
+        name='lidar_type',
+        default_value='empty',
+        description='Lidar type to use. Options: empty, LD06.')
 
     world_name_cmd = DeclareLaunchArgument(
         name='world_name',
@@ -150,8 +164,10 @@ def generate_launch_description():
     ld = LaunchDescription()
     ld.add_action(use_sim_time_cmd)
     ld.add_action(nanosaur_cmd)
+    ld.add_action(declare_camera_type_cmd)
+    ld.add_action(declare_lidar_type_cmd)
     ld.add_action(world_name_cmd)
-    ld.add_action(OpaqueFunction(function=launch_gazebo_setup, args=[namespace, world_name]))
+    ld.add_action(OpaqueFunction(function=launch_gazebo_setup, args=[robot_name, camera_type, lidar_type, world_name]))
     ld.add_action(rsp_launcher)
     ld.add_action(ros_gz_bridge)
 
