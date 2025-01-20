@@ -43,7 +43,9 @@ class Coordinate:
         except IndexError:
             return str(default)
 
-    def __init__(self, config={}) -> None:
+    def __init__(self, config=None) -> None:
+        if config is None:
+            config = {}
         position = config.get('xyz', [])
         orientation = config.get('RPY', [])
         self.x = self.safe_list_get(position, 0)
@@ -54,8 +56,7 @@ class Coordinate:
         self.Y = self.safe_list_get(orientation, 2)
         
     def __repr__(self) -> str:
-        coordinate = f"xyz=[{self.x} {self.y} {self.z}] RPY=[{self.R} {self.P} {self.Y}]"
-        return coordinate
+        return f"xyz=[{self.x} {self.y} {self.z}] RPY=[{self.R} {self.P} {self.Y}]"
 
 
 def load_robot_position(config, world_file_name):

@@ -123,7 +123,8 @@ def generate_launch_description():
 
     use_sim_time = LaunchConfiguration('use_sim_time')
     world_name = LaunchConfiguration('world_name')
-    ##############################àworld_name = "lab"
+    ##############################
+    # world_name = "lab"
     head_type = LaunchConfiguration('head_type')
     flap_type = LaunchConfiguration('flap_type')
     robot_name = LaunchConfiguration('robot_name')
