@@ -37,12 +37,14 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.conditions import LaunchConfigurationEquals
 
 
-def launch_gz_bridge_setup(context: LaunchContext, support_use_sim_time, support_robot_name, support_world_name):
+def launch_gz_bridge_setup(context: LaunchContext, support_use_sim_time, support_world_name, support_robot_name, support_camera_type, support_lidar_type):
 
     use_sim_time = context.perform_substitution(support_use_sim_time)
     # Cast in boolean
     use_sim_time = use_sim_time.lower() in ("true", "1", "yes", "on")
     robot_name = context.perform_substitution(support_robot_name)
+    camera_type = context.perform_substitution(support_camera_type)
+    lidar_type = context.perform_substitution(support_lidar_type)
     world_name = context.perform_substitution(support_world_name)
     
     scan_bridge = Node(
@@ -103,7 +105,7 @@ def launch_gz_bridge_setup(context: LaunchContext, support_use_sim_time, support
             ('/infra2/camera_raw', 'infra2/image_raw'),
             ('/infra2/camera_info', 'infra2/camera_info')
         ],
-        condition=LaunchConfigurationEquals('head_type', 'realsense')
+        condition=LaunchConfigurationEquals('camera_type', 'realsense')
     )
 
     # include another launch file in nanosaur namespace
@@ -125,8 +127,8 @@ def generate_launch_description():
     world_name = LaunchConfiguration('world_name')
     ##############################
     # world_name = "lab"
-    head_type = LaunchConfiguration('head_type')
-    flap_type = LaunchConfiguration('flap_type')
+    camera_type = LaunchConfiguration('camera_type')
+    lidar_type = LaunchConfiguration('lidar_type')
     robot_name = LaunchConfiguration('robot_name')
 
     use_sim_time_cmd = DeclareLaunchArgument(
@@ -144,15 +146,15 @@ def generate_launch_description():
         default_value='nanosaur',
         description='robot name (namespace). If you are working with multiple robot you can change this parameter.')
 
-    declare_head_type_cmd = DeclareLaunchArgument(
-        name='head_type',
+    declare_camera_type_cmd = DeclareLaunchArgument(
+        name='camera_type',
         default_value='empty',
-        description='Head type to use. Options: empty, Realsense, zed.')
+        description='camera type to use. Options: empty, Realsense, zed.')
 
-    declare_flap_type_cmd = DeclareLaunchArgument(
-        name='flap_type',
+    declare_lidar_type_cmd = DeclareLaunchArgument(
+        name='lidar_type',
         default_value='empty',
-        description='Flap type to use. Options: empty, LD06.')
+        description='Lidar type to use. Options: empty, LD06.')
 
     ###################### Twist controls ######################
 
@@ -170,10 +172,10 @@ def generate_launch_description():
     ld = LaunchDescription()
     ld.add_action(use_sim_time_cmd)
     ld.add_action(world_name_cmd)
-    ld.add_action(declare_head_type_cmd)
-    ld.add_action(declare_flap_type_cmd)
     ld.add_action(nanosaur_cmd)
-    ld.add_action(OpaqueFunction(function=launch_gz_bridge_setup, args=[use_sim_time, robot_name, world_name]))
+    ld.add_action(declare_camera_type_cmd)
+    ld.add_action(declare_lidar_type_cmd)
+    ld.add_action(OpaqueFunction(function=launch_gz_bridge_setup, args=[use_sim_time, world_name, robot_name, camera_type, lidar_type]))
     ld.add_action(twist_control_launch)
 
     return ld
