@@ -1,10 +1,7 @@
 
 services:
   nanosaur_simulator:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-    image: nanosaur-simulator
+    image: nanosaur/simulation
     environment:
       - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
       - USER=${USER}
