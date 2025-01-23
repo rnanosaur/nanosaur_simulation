@@ -28,30 +28,41 @@
 if [ -n "$HOST_USER_UID" ] && [ -n "$HOST_USER_GID" ]; then
 
     if [ ! $(getent group ${HOST_USER_GID}) ]; then
-    echo "Creating non-root container '${USER}' for host user uid=${HOST_USER_UID}:gid=${HOST_USER_GID}"
-    groupadd --gid ${HOST_USER_GID} ${USER} &>/dev/null
+        echo "Creating non-root container '${USER}' for host user uid=${HOST_USER_UID}:gid=${HOST_USER_GID}"
+        groupadd --gid ${HOST_USER_GID} ${USER} &>/dev/null
+    else
+        CONFLICTING_GROUP_NAME=`getent group ${HOST_USER_GID} | cut -d: -f1`
+        groupmod -o --gid ${HOST_USER_GID} -n ${USERNAME} ${CONFLICTING_GROUP_NAME}
     fi
 
     if [ ! $(getent passwd ${HOST_USER_UID}) ]; then
-    echo "User with UID ${HOST_USER_UID} does not exist. Creating user '${USER}'"
-    useradd --no-log-init --uid ${HOST_USER_UID} --gid ${HOST_USER_GID} -m ${USER} &>/dev/null
+        echo "User with UID ${HOST_USER_UID} does not exist. Creating user '${USER}'"
+        useradd --no-log-init --uid ${HOST_USER_UID} --gid ${HOST_USER_GID} -m ${USER} &>/dev/null
+    else
+        CONFLICTING_USER_NAME=`getent passwd ${HOST_USER_UID} | cut -d: -f1`
+        usermod -l ${USERNAME} -u ${HOST_USER_UID} -m -d /home/${USERNAME} ${CONFLICTING_USER_NAME} &>/dev/null
+        mkdir -p /home/${USERNAME}
+        # Wipe files that may create issues for users with large uid numbers.
+        rm -f /var/log/lastlog /var/log/faillog
     fi
 
-    source /opt/ros/${ROS_DISTRO}/setup.bash
+    # Update 'admin' user
+    chown ${USERNAME}:${USERNAME} /home/${USERNAME}
+    echo ${USERNAME} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${USERNAME}
+    chmod 0440 /etc/sudoers.d/${USERNAME}
+    adduser ${USERNAME} video >/dev/null
+    adduser ${USERNAME} plugdev >/dev/null
+    adduser ${USERNAME} sudo  >/dev/null
 
+    # Source ROS
+    source /opt/ros/${ROS_DISTRO}/setup.bash
     # Source ROS workspace if exists
     if [[ ! -z "${ROS_WS}" ]]; then
     source ${ROS_WS}/install/setup.bash
     fi
 
     # Execute command
-    if [ "$1" == "bash" ]; then
-        shift
-        exec bash "$@"
-    else
-        echo "$USER - Starting perception with commands: $@"
-        exec gosu ${USER} ros2 launch nanosaur_${SIMULATOR_PACKAGE} ${SIMULATOR_LAUNCH_FILE:-nanosaur_bridge.launch.py} $@
-    fi
+    exec gosu ${USERNAME} "$@"
 
 fi
 
