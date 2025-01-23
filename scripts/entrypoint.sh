@@ -27,6 +27,27 @@
 # Check if HOST_USER_UID and HOST_USER_GID are set
 if [ -n "$HOST_USER_UID" ] && [ -n "$HOST_USER_GID" ]; then
 
+    # Check if the user exists
+    if id "$USERNAME" &>/dev/null; then
+        echo "User '$USERNAME' already exists."
+    else
+        echo "User '$USERNAME' does not exist. Creating user..."
+        adduser --disabled-password --gecos "" "$USERNAME"
+        echo "User '$USERNAME' created."
+    fi
+
+    # Check if the group exists
+    if getent group "$USERNAME" &>/dev/null; then
+        echo "Group '$USERNAME' already exists."
+    else
+        echo "Group '$USERNAME' does not exist. Creating group..."
+        groupadd "$USERNAME"
+        echo "Group '$USERNAME' created."
+    fi
+
+    # Ensure the user is in the group
+    usermod -aG "$USERNAME" "$USERNAME"
+
     if [ ! $(getent group ${HOST_USER_GID}) ]; then
         echo "Creating non-root container '${USER}' for host user uid=${HOST_USER_UID}:gid=${HOST_USER_GID}"
         groupadd --gid ${HOST_USER_GID} ${USER} &>/dev/null
