@@ -45,11 +45,14 @@ if [ -n "$HOST_USER_UID" ] && [ -n "$HOST_USER_GID" ]; then
     fi
 
     # Execute command
-    if [ $# -eq 0 ]; then
-        exec gosu ${USER} ros2 launch nanosaur_${SIMULATOR_PACKAGE} ${SIMULATOR_LAUNCH_FILE:-nanosaur_bridge.launch.py}
+    if [ "$1" == "bash" ]; then
+        shift
+        exec bash "$@"
     else
-        exec gosu ${USER} "$@"
+        echo "$USER - Starting perception with commands: $@"
+        exec gosu ${USER} ros2 launch nanosaur_${SIMULATOR_PACKAGE} ${SIMULATOR_LAUNCH_FILE:-nanosaur_bridge.launch.py} $@
     fi
+
 fi
 
 # Execute command as root if HOST_USER_UID and HOST_USER_GID are not set
