@@ -34,8 +34,6 @@ RUN mkdir src
 # Copy the nanosaur_simulations packages into the workspace
 COPY shared_src src/
 COPY simulation_ws/src src/
-# Clone the nanosaur package from the specified repository and branch
-# RUN git clone --branch nanosaur2 https://github.com/rnanosaur/nanosaur.git src/nanosaur
 
 # Install dependencies
 RUN apt-get update && apt-get install -y \
