@@ -27,29 +27,16 @@
 # Check if HOST_USER_UID and HOST_USER_GID are set
 if [ -n "$HOST_USER_UID" ] && [ -n "$HOST_USER_GID" ]; then
 
-    # Check if the user exists
-    if id "$USERNAME" &>/dev/null; then
-        echo "User '$USERNAME' already exists."
-    else
-        echo "User '$USERNAME' does not exist. Creating user..."
-        adduser --disabled-password --gecos "" "$USERNAME"
-        echo "User '$USERNAME' created."
-    fi
-
-    # Check if the group exists
-    if getent group "$USERNAME" &>/dev/null; then
-        echo "Group '$USERNAME' already exists."
-    else
-        echo "Group '$USERNAME' does not exist. Creating group..."
-        groupadd "$USERNAME"
-        echo "Group '$USERNAME' created."
-    fi
+    # Ensure the user exists
+    id "$USERNAME" &>/dev/null || adduser --disabled-password --gecos "" "$USERNAME" &>/dev/null
+    # Ensure the group exists
+    getent group "$USERNAME" &>/dev/null || groupadd "$USERNAME" &>/dev/null
 
     # Ensure the user is in the group
-    usermod -aG "$USERNAME" "$USERNAME"
+    usermod -aG "$USERNAME" "$USERNAME" &>/dev/null
 
     if [ ! $(getent group ${HOST_USER_GID}) ]; then
-        echo "Creating non-root container '${USER}' for host user uid=${HOST_USER_UID}:gid=${HOST_USER_GID}"
+        # echo "Creating non-root container '${USER}' for host user uid=${HOST_USER_UID}:gid=${HOST_USER_GID}"
         groupadd --gid ${HOST_USER_GID} ${USER} &>/dev/null
     else
         CONFLICTING_GROUP_NAME=`getent group ${HOST_USER_GID} | cut -d: -f1`
@@ -57,7 +44,7 @@ if [ -n "$HOST_USER_UID" ] && [ -n "$HOST_USER_GID" ]; then
     fi
 
     if [ ! $(getent passwd ${HOST_USER_UID}) ]; then
-        echo "User with UID ${HOST_USER_UID} does not exist. Creating user '${USER}'"
+        # echo "User with UID ${HOST_USER_UID} does not exist. Creating user '${USER}'"
         useradd --no-log-init --uid ${HOST_USER_UID} --gid ${HOST_USER_GID} -m ${USER} &>/dev/null
     else
         CONFLICTING_USER_NAME=`getent passwd ${HOST_USER_UID} | cut -d: -f1`
