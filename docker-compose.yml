@@ -1,7 +1,8 @@
 
 services:
-  nanosaur_gazebo:
-    image: nanosaur/gazebo
+  gazebo:
+    image: nanosaur/simulation:gazebo
+    container_name: gazebo
     environment:
       - DISPLAY=${DISPLAY}
       - ROS_DOMAIN_ID=${ROS_DOMAIN_ID:-0}
@@ -16,6 +17,8 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - /home/rbonghi/.Xauthority:/home/admin/.Xauthority:rw
+    profiles:
+      - "gazebo"
 
   nanosaur_simulator:
     image: nanosaur/simulation
@@ -30,3 +33,31 @@ services:
     ipc: host
     volumes:
       - /etc/localtime:/etc/localtime:ro
+
+  isaacsim:
+    image: nanosaur/simulation:isaacsim
+    container_name: isaacsim
+    runtime: nvidia
+    environment:
+      - ACCEPT_EULA=Y
+      - PRIVACY_CONSENT=Y
+      - HOST_USER_UID=${UID}
+      - HOST_USER_GID=${GID}
+      - ROS_DOMAIN_ID=0
+      - USER=${USER}
+    network_mode: host
+    ipc: host
+    stdin_open: true
+    tty: true
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${NANOSAUR_HOME}/isaac-sim-cache/cache/kit:/isaac-sim/kit/cache:rw
+      - ${NANOSAUR_HOME}/isaac-sim-cache/cache/ov:/home/ubuntu/.cache/ov:rw
+      - ${NANOSAUR_HOME}/isaac-sim-cache/cache/pip:/home/ubuntu/.cache/pip:rw
+      - ${NANOSAUR_HOME}/isaac-sim-cache/cache/glcache:/home/ubuntu/.cache/nvidia/GLCache:rw
+      - ${NANOSAUR_HOME}/isaac-sim-cache/cache/computecache:/home/ubuntu/.nv/ComputeCache:rw
+      - ${NANOSAUR_HOME}/isaac-sim-cache/logs:/home/ubuntu/.nvidia-omniverse/logs:rw
+      - ${NANOSAUR_HOME}/isaac-sim-cache/data:/home/ubuntu/.local/share/ov/data:rw
+      - ${NANOSAUR_HOME}/isaac-sim-cache/documents:/home/ubuntu/Documents:rw
+    profiles:
+      - "gazebo"

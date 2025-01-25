@@ -44,10 +44,10 @@ def initialize_simulation_app(
         print(f"Configuration file {file_path} not found. Using default settings.")
         config = {}
     # Use default values if some settings are not defined
-    simulation_config = {**default_config, **config}
+    simulation_config = default_config | config
     simulation_app = SimulationApp(simulation_config)
     # Load extensions
-    from omni.isaac.core.utils.extensions import enable_extension
+    from omni.isaac.core.utils.extensions import enable_extension # type: ignore
     # enable ROS2 bridge extension
     enable_extension("omni.isaac.ros2_bridge")
     simulation_app.update()
@@ -59,12 +59,30 @@ def main():
     parser = argparse.ArgumentParser(
         description="Isaac Sim Wrapper. Load Isaac Sim and bridge with URDF"
     )
-    parser.add_argument("file_path", type=str, help="Isaac Sim file path configuration")
+    parser.add_argument(
+        "--file_path",
+        type=str,
+        default="config.yaml",
+        help="Isaac Sim file path configuration (default: config.yaml)"
+    )
+
+    parser.add_argument(
+        "--headless",
+        action="store_true",
+        help="Run simulation in headless mode"
+    )
+    
+    parser.add_argument(
+        "--renderer",
+        type=str,
+        default="RayTracedLighting",
+        help="Set the render mode (default: RayTracedLighting)"
+    )
 
     # Parse the arguments
     args = parser.parse_args()
     # Load Isaac Sim with ROS 2 extension enabled
-    simulation_app = initialize_simulation_app(args.file_path)
+    simulation_app = initialize_simulation_app(renderer=args.renderer, headless=args.headless, file_path=args.file_path)
     # Load the Isaac World library
     import isaac_world
     # Start ros 2 Isaac World controller

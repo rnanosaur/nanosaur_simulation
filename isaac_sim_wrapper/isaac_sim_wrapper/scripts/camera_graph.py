@@ -37,18 +37,9 @@ from pxr import Gf, UsdGeom
 
 class CameraGraph:
 
-    def __init__(self,
-                 node : Node, 
-                 simulation_app : SimulationApp,
-                 domain_id: int,
-                 robot_name: str,
-                 number_camera: int,
-                 namespace: str = "",
-                 camera_name: str = "camera",
-                 camera_frame: str = "frame",
-                 camera_optical_frame: str = "optical_frame",
-                 resolution: tuple[int, int] = [640, 480],
-                 visible: bool = True):
+    def __init__(self, node : Node, simulation_app : SimulationApp, domain_id: int, robot_name: str, number_camera: int, namespace: str = "", camera_name: str = "camera", camera_frame: str = "frame", camera_optical_frame: str = "optical_frame", resolution: tuple[int, int] = None, visible: bool = True):
+        if resolution is None:
+            resolution = [640, 480]
         self._node = node
         self._simulation_app = simulation_app
         self._domain_id = domain_id

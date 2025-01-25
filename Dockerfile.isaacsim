@@ -1,0 +1,78 @@
+# Copyright (C) 2025, Raffaello Bonghi <raffaello@rnext.it>
+# All rights reserved
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 1. Redistributions of source code must retain the above copyright 
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+# 3. Neither the name of the copyright holder nor the names of its 
+#    contributors may be used to endorse or promote products derived 
+#    from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, 
+# BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+# OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
+# EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+
+FROM nvcr.io/nvidia/isaac-sim:4.2.0
+
+# Install ROS 2 Humble
+RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
+    apt-get install -y curl gnupg2 lsb-release && \
+    curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add - && \
+    sh -c 'echo "deb http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2-latest.list' && \
+    DEBIAN_FRONTEND=noninteractive apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y ros-humble-ros-base ros-dev-tools && sudo rosdep init && \
+    rm -rf /var/lib/apt/lists/*
+
+ENV ROS_DISTRO=humble
+# Specify non-root admin user for container
+ARG USERNAME=ubuntu
+ENV USERNAME=${USERNAME}
+
+# Create a workspace
+ENV ROS_WS=/ros_ws
+RUN mkdir -p $ROS_WS/src
+WORKDIR $ROS_WS
+
+# Change the user to non-root
+RUN chown -R ${USERNAME}:${USERNAME} /isaac-sim
+
+# Copy the nanosaur_simulations packages into the workspace
+COPY shared_src src/
+COPY simulation_ws/src src/
+# Copy scripts
+RUN cp ${ROS_WS}/src/nanosaur_simulations/scripts/isaacsim_entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    gosu sudo \
+    python3-colcon-common-extensions && \
+    rosdep update && \
+    rosdep install --from-paths src --ignore-src -r -y && \
+    rm -rf /var/lib/apt/lists/*
+# Compile the workspace
+
+RUN . /opt/ros/$ROS_DISTRO/setup.sh && \
+    colcon build && \
+    rm -R $ROS_WS/build $ROS_WS/src $ROS_WS/log
+
+
+WORKDIR /isaac-sim
+# https://docs.docker.com/engine/reference/builder/#stopsignal
+# https://hynek.me/articles/docker-signals/
+STOPSIGNAL SIGINT
+
+# Set the entrypoint
+ENTRYPOINT [ "/entrypoint.sh" ]

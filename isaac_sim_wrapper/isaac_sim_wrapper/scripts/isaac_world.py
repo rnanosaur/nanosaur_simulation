@@ -26,6 +26,7 @@
 import re
 import os
 import carb
+import contextlib
 import rclpy
 from isaacsim import SimulationApp
 from omni.isaac.core import World, SimulationContext
@@ -50,20 +51,32 @@ BACKGROUND_STAGE_PATH = "/background"
 def build_clock_graph():
     Controller.edit(
         {
-            "graph_path": f"/Clock",
+            "graph_path": "/Clock",
             "evaluator_name": "execution",
-            "pipeline_stage": GraphPipelineStage.GRAPH_PIPELINE_STAGE_SIMULATION
+            "pipeline_stage": GraphPipelineStage.GRAPH_PIPELINE_STAGE_SIMULATION,
         },
         {
             Controller.Keys.CREATE_NODES: [
                 ("OnPlaybackTick", "omni.graph.action.OnPlaybackTick"),
-                ("IsaacReadSimulationTime", "omni.isaac.core_nodes.IsaacReadSimulationTime"),
-                ("ROS2PublishClock", "omni.isaac.ros2_bridge.ROS2PublishClock"),
+                (
+                    "IsaacReadSimulationTime",
+                    "omni.isaac.core_nodes.IsaacReadSimulationTime",
+                ),
+                (
+                    "ROS2PublishClock",
+                    "omni.isaac.ros2_bridge.ROS2PublishClock",
+                ),
             ],
             Controller.Keys.CONNECT: [
-                ("OnPlaybackTick.outputs:tick", "ROS2PublishClock.inputs:execIn"),
-                ("IsaacReadSimulationTime.outputs:simulationTime", "ROS2PublishClock.inputs:timeStamp"),
-            ]
+                (
+                    "OnPlaybackTick.outputs:tick",
+                    "ROS2PublishClock.inputs:execIn",
+                ),
+                (
+                    "IsaacReadSimulationTime.outputs:simulationTime",
+                    "ROS2PublishClock.inputs:timeStamp",
+                ),
+            ],
         },
     )
 
@@ -103,10 +116,8 @@ class IsaacRobotSpawner(Node):
             robot_urdf = robot_urdf.replace(f'package://{package_name}', package_directory)
         # Load URDF from file
         temp_path_local_urdf_file="/tmp/robot.urdf"
-        # Save robot urdf
-        text_file = open(temp_path_local_urdf_file, "w")
-        n = text_file.write(robot_urdf)
-        text_file.close()
+        with open(temp_path_local_urdf_file, "w") as text_file:
+            text_file.write(robot_urdf)
         # Load robot
         status, import_config = commands.execute(
             "URDFCreateImportConfig")
@@ -250,9 +261,8 @@ class IsaacWorld(Node):
                     continue
                 rclpy.spin_once(self._robot_spawner[idx], timeout_sec=0.0)
             # Fix time simulation
-            if self._simulation_context.is_playing():
-                if self._simulation_context.current_time_step_index == 0:
-                    self._simulation_context.reset()
+            if self._simulation_context.is_playing() and self._simulation_context.current_time_step_index == 0:
+                self._simulation_context.reset()
 
     def _status_isaac_word(self, request, response):
         self.get_logger().info("Request status Isaac Sim")
@@ -266,9 +276,7 @@ def ros_bridge_main(simulation_app: SimulationApp):
     rclpy.init()
     # Start Isaac World controller
     with IsaacWorld(simulation_app) as isaac_world:
-        try:
+        with contextlib.suppress(KeyboardInterrupt, SystemExit):
             isaac_world.simulate()
-        except (KeyboardInterrupt, SystemExit):
-            pass
     rclpy.shutdown()
 # EOF

@@ -31,23 +31,35 @@ from launch.substitutions import LaunchConfiguration
 from launch.actions import ExecuteProcess, DeclareLaunchArgument, OpaqueFunction
 
 
-def launch_setup(context: LaunchContext, support_isaac_sim_folder):
+def launch_setup(context: LaunchContext, support_isaac_sim_folder, support_config_file_path, support_renderer, support_headless):
+    # Get the package share directory
     package_isaac_sim = get_package_share_directory('isaac_sim_wrapper')
-    # render namespace, dumping the support_package.
+    # Get the path to the Isaac Sim folder
     isaac_sim_folder = context.perform_substitution(support_isaac_sim_folder)
-    isaac_sim_version = isaac_sim_folder.split('-')[-1]
-    # Get the user's home directory
-    user_home_dir = os.path.expanduser("~")
-    isaac_sim_path = f"{user_home_dir}/.local/share/ov/pkg/{isaac_sim_folder}"
-    # Config path
-    package_isaac_sim_config = os.path.join(package_isaac_sim, "config", 'isaac_sim.yaml')
+    config_file_path = context.perform_substitution(support_config_file_path)
+    renderer = context.perform_substitution(support_renderer)
+    headless = context.perform_substitution(support_headless).lower() == 'true'
+    # Read the VERSION file from the isaac_sim_folder
+    version_file_path = os.path.join(isaac_sim_folder, 'VERSION')
+    if os.path.exists(version_file_path):
+        with open(version_file_path, 'r') as version_file:
+            version_content = version_file.read().strip().split('-')[0]
+    else:
+        version_content = "Unknown"
 
-    print(f"Run Isaac Sim {isaac_sim_version} from {isaac_sim_path}")
+    print(f"Run Isaac Sim {version_content} from {isaac_sim_folder}")
     # Path Launcher Isaac Sim
     isaac_sim_wrapper_launcher = os.path.join(package_isaac_sim, "scripts", "isaac_sim_robot_launcher.py")
+    # Command to start Isaac Sim
+    command = [f"{isaac_sim_folder}/python.sh", isaac_sim_wrapper_launcher, "--renderer", renderer, "--headless" if headless else ""]    
+    # Add the configuration file if it exists
+    if config_file_path:
+        print(f"Load configuration file {config_file_path}")
+        command += ["--config_file", config_file_path]
+
     # Start Isaac Sim from python script
     isaac_sim = ExecuteProcess(
-            cmd=[f"{isaac_sim_path}/python.sh", isaac_sim_wrapper_launcher, package_isaac_sim_config],
+            cmd=command,
             name='IsaacSim',
             output='screen',
             shell=True
@@ -60,14 +72,42 @@ def generate_launch_description():
 
     isaac_sim_folder_cmd = DeclareLaunchArgument(
         name='isaac_sim_folder',
-        default_value='prod-isaac-sim-4.1.0',
-        description='Folder name Isaac Sim version')
+        default_value='/isaac-sim',
+        description='Isaac Sim folder name'
+    )
     
     isaac_sim_folder = LaunchConfiguration('isaac_sim_folder')
 
+    config_file_path_cmd = DeclareLaunchArgument(
+        name='config_file_path',
+        default_value='',
+        description='Path to the configuration file'
+    )
+    
+    config_file_path = LaunchConfiguration('config_file_path')
+
+    renderer_cmd = DeclareLaunchArgument(
+        name='renderer',
+        default_value='RayTracedLighting',
+        description='Set the render mode'
+    )
+    
+    renderer = LaunchConfiguration('renderer')
+    
+    headless_cmd = DeclareLaunchArgument(
+        name='headless',
+        default_value='true',
+        description='Run Isaac Sim in headless mode'
+    )
+    
+    headless = LaunchConfiguration('headless')
+    
     ld = LaunchDescription()
     ld.add_action(isaac_sim_folder_cmd)
-    ld.add_action(OpaqueFunction(function=launch_setup, args=[isaac_sim_folder]))
+    ld.add_action(config_file_path_cmd)
+    ld.add_action(renderer_cmd)
+    ld.add_action(headless_cmd)
+    ld.add_action(OpaqueFunction(function=launch_setup, args=[isaac_sim_folder, config_file_path, renderer, headless]))
     
     return ld
 # EOF
