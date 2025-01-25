@@ -72,7 +72,7 @@ def launch_setup(context: LaunchContext, support_package):
 
 
 def generate_launch_description():
-    package_isaac_sim = get_package_share_directory('nanosaur_isaac_sim')
+    package_isaac_sim = get_package_share_directory('nanosaur_isaac-sim')
 
     robot_name = LaunchConfiguration('robot_name', default="nanosaur")
 

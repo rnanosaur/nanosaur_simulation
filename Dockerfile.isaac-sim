@@ -68,11 +68,11 @@ RUN . /opt/ros/$ROS_DISTRO/setup.sh && \
     colcon build && \
     rm -R $ROS_WS/build $ROS_WS/src $ROS_WS/log
 
-
-WORKDIR /isaac-sim
 # https://docs.docker.com/engine/reference/builder/#stopsignal
 # https://hynek.me/articles/docker-signals/
 STOPSIGNAL SIGINT
 
 # Set the entrypoint
 ENTRYPOINT [ "/entrypoint.sh" ]
+# Set the default command
+CMD [ "ros2", "launch", "isaac_sim_wrapper", "isaac_sim_server.launch.py" ]

@@ -60,4 +60,4 @@ services:
       - ${NANOSAUR_HOME}/isaac-sim-cache/data:/home/ubuntu/.local/share/ov/data:rw
       - ${NANOSAUR_HOME}/isaac-sim-cache/documents:/home/ubuntu/Documents:rw
     profiles:
-      - "gazebo"
+      - "isaacsim"

@@ -27,15 +27,17 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument,IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
-from launch.substitutions import LaunchConfiguration
+from launch.actions import GroupAction
+from launch_ros.actions import PushRosNamespace
+from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 
 def generate_launch_description():
-    package_nanosaur_isaac_sim = get_package_share_directory('nanosaur_isaac_sim')
-    package_isaac_sim = get_package_share_directory('isaac_sim_wrapper')
+    pkg_control = get_package_share_directory('nanosaur_control')
+    package_nanosaur_isaac_sim = get_package_share_directory('nanosaur_isaac-sim')
     use_sim_time = LaunchConfiguration('use_sim_time')
     robot_name = LaunchConfiguration('robot_name')
     
@@ -61,14 +63,9 @@ def generate_launch_description():
         default_value='empty',
         description='Lidar type to use. Options: empty, LD06.')
 
-    isaac_sim_launcher = IncludeLaunchDescription(
+    rsp_launcher = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            [os.path.join(package_isaac_sim, 'launch'), '/isaac_sim_server.launch.py']),
-    )
-    
-    nanosaur_bridge_launcher = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            [launch_file_dir, '/nanosaur_bridge.launch.py']),
+            [launch_file_dir, '/robot_state_publisher.launch.py']),
         launch_arguments={
             'use_sim_time': use_sim_time,
             'robot_name': robot_name,
@@ -77,13 +74,26 @@ def generate_launch_description():
         }.items(),
     )
 
+    ###################### Twist controls ######################
+
+    # include another launch file in nanosaur namespace
+    twist_control_launch = GroupAction(
+        actions=[
+            # push-ros-namespace to set namespace of included nodes
+            PushRosNamespace(robot_name),
+            # nanosaur twist launch
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource([pkg_control, '/launch/twist_control.launch.py']))
+        ]
+    )
+
     ld = LaunchDescription()
-    ld.add_action(use_sim_time_cmd)
     ld.add_action(nanosaur_cmd)
     ld.add_action(declare_camera_type_cmd)
     ld.add_action(declare_lidar_type_cmd)
-    ld.add_action(isaac_sim_launcher)
-    ld.add_action(nanosaur_bridge_launcher)
-    
+    ld.add_action(use_sim_time_cmd)
+    ld.add_action(rsp_launcher)
+    ld.add_action(twist_control_launch)
+
     return ld
 # EOF
