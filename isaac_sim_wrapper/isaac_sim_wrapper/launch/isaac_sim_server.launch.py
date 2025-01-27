@@ -61,7 +61,6 @@ def launch_setup(context: LaunchContext, support_isaac_sim_path, support_config_
     if config_file_path:
         print(f"Load configuration file {config_file_path}")
         command += ["--config_file", config_file_path]
-    exit(0)
     # Start Isaac Sim from python script
     isaac_sim = ExecuteProcess(
             cmd=command,
