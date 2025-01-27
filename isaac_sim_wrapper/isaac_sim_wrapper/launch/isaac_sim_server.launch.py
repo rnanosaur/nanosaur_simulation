@@ -39,6 +39,11 @@ def launch_setup(context: LaunchContext, support_isaac_sim_path, support_config_
     config_file_path = context.perform_substitution(support_config_file_path)
     renderer = context.perform_substitution(support_renderer)
     headless = context.perform_substitution(support_headless).lower() == 'true'
+    # Check if the environment variable HEADLESS_MODE is set to true
+    # This variable overrides the headless argument passed to the launch file
+    if 'HEADLESS_MODE' in os.environ:
+        print("Environment variable HEADLESS_MODE is set to true. Running in headless mode.")
+        headless = os.getenv('HEADLESS_MODE', 'false').lower() == 'true'
     # Read the VERSION file from the isaac_sim_folder
     version_file_path = os.path.join(isaac_sim_path, 'VERSION')
     if os.path.exists(version_file_path):
@@ -47,7 +52,7 @@ def launch_setup(context: LaunchContext, support_isaac_sim_path, support_config_
     else:
         version_content = "Unknown"
 
-    print(f"Run Isaac Sim {version_content} from {isaac_sim_path}")
+    print(f"Run Isaac Sim {version_content} from {isaac_sim_path} in {renderer} mode with headless={headless}")
     # Path Launcher Isaac Sim
     isaac_sim_wrapper_launcher = os.path.join(package_isaac_sim, "scripts", "isaac_sim_robot_launcher.py")
     # Command to start Isaac Sim
@@ -56,7 +61,7 @@ def launch_setup(context: LaunchContext, support_isaac_sim_path, support_config_
     if config_file_path:
         print(f"Load configuration file {config_file_path}")
         command += ["--config_file", config_file_path]
-
+    exit(0)
     # Start Isaac Sim from python script
     isaac_sim = ExecuteProcess(
             cmd=command,

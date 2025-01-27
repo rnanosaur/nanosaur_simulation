@@ -81,7 +81,7 @@ def load_robot_position(config, world_file_name):
     return Coordinate(config)
 
 
-def launch_gazebo_setup(context: LaunchContext, support_world):
+def launch_gazebo_setup(context: LaunchContext, support_world, support_headless):
     """ Reference:
         https://answers.ros.org/question/396345/ros2-launch-file-how-to-convert-launchargument-to-string/ 
         https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_moveit_config/launch/ur_moveit.launch.py
@@ -90,9 +90,21 @@ def launch_gazebo_setup(context: LaunchContext, support_world):
     package_worlds = get_package_share_directory('nanosaur_worlds')
     # render namespace, dumping the support_package.
     world_name = f'{context.perform_substitution(support_world)}.sdf'
-    print(f"Loading world: {world_name}")
+    headless = context.perform_substitution(support_headless).lower() == 'true'
+    # The environment variable HEADLESS_MODE is used to set the headless mode
+    # of Gazebo. If the variable is set to true, Gazebo will run in headless mode.
+    # This variable override the headless argument passed to the launch file.
+    if 'HEADLESS_MODE' in os.environ:
+        print("Environment variable HEADLESS_MODE is set to true. Running in headless mode.")
+        headless = os.getenv('HEADLESS_MODE', 'false').lower() == 'true'
+    
     gui_config = os.path.join(package_gazebo, "gui", "gui.config")
     basic_world = os.path.join(package_worlds, "worlds", world_name)
+    
+    gz_args = f'-r -v 3 {basic_world}  --gui-config {gui_config}'
+    if headless:
+        print("Run Gazebo in headless mode")
+        gz_args += ' -s'
 
     ign_gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -104,9 +116,7 @@ def launch_gazebo_setup(context: LaunchContext, support_world):
                 )
             ]
         ),
-        launch_arguments=[
-            ('gz_args', [f' -r -v 3 {basic_world}  --gui-config {gui_config}'])
-        ],
+        launch_arguments={'gz_args': gz_args}.items(),
     )
 
     return [ign_gazebo]
@@ -134,11 +144,20 @@ def generate_launch_description():
         default_value=default_world_name,
         description='Simulation world name.')
 
+    headless_cmd = DeclareLaunchArgument(
+        name='headless',
+        default_value='false',
+        description='Run Isaac Sim in headless mode'
+    )
+    
+    headless = LaunchConfiguration('headless')
+
     ld = LaunchDescription()
     ld.add_action(ign_resource_path)
     ld.add_action(use_sim_time_cmd)
     ld.add_action(world_name_cmd)
-    ld.add_action(OpaqueFunction(function=launch_gazebo_setup, args=[world_name]))
+    ld.add_action(headless_cmd)
+    ld.add_action(OpaqueFunction(function=launch_gazebo_setup, args=[world_name, headless]))
 
     return ld
 # EOF
