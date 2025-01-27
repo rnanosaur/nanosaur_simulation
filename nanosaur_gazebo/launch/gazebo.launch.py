@@ -91,12 +91,12 @@ def launch_gazebo_setup(context: LaunchContext, support_world, support_headless)
     # render namespace, dumping the support_package.
     world_name = f'{context.perform_substitution(support_world)}.sdf'
     headless = context.perform_substitution(support_headless).lower() == 'true'
-    # The environment variable HEADLESS_MODE is used to set the headless mode
+    # The environment variable SIMULATION_HEADLESS is used to set the headless mode
     # of Gazebo. If the variable is set to true, Gazebo will run in headless mode.
     # This variable override the headless argument passed to the launch file.
-    if 'HEADLESS_MODE' in os.environ:
-        print("Environment variable HEADLESS_MODE is set to true. Running in headless mode.")
-        headless = os.getenv('HEADLESS_MODE', 'false').lower() == 'true'
+    if 'SIMULATION_HEADLESS' in os.environ:
+        print("Environment variable SIMULATION_HEADLESS is set to true. Running in headless mode.")
+        headless = os.getenv('SIMULATION_HEADLESS', 'false').lower() == 'true'
     
     gui_config = os.path.join(package_gazebo, "gui", "gui.config")
     basic_world = os.path.join(package_worlds, "worlds", world_name)
