@@ -16,16 +16,18 @@ Meet nanosaur:
 * 🐳 nanosaur [Docker hub](https://hub.docker.com/u/nanosaur)
 * ⁉️ Something wrong? Open an [issue](https://github.com/rnanosaur/nanosaur/issues)
 <!-- INTRO END -->
-<!-- FOOTER START -->
+<!-- LICENSE START -->
 ## License
 
 * All code is Under license [MIT](LICENSE)
 
 For more information about this project please follow [nanosaur.ai/about](https://nanosaur.ai/about/#license)
+<!-- LICENSE END -->
+## Extra credits
 
 **Cozmo.world and all models** gentle contribution from [Ricardo Tellez](https://www.theconstructsim.com/) - [**@TheConstructAi**](https://github.com/TheConstructAi)
-
+<!-- CREDITS START -->
 ## Contact Information
 
 For any questions or inquiries, please contact us at [raffaello@nanosaur.ai](mailto:raffaello@nanosaur.ai).
-<!-- FOOTER END -->
+<!-- CREDITS END -->
