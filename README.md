@@ -13,7 +13,7 @@ Meet nanosaur:
 * 🦕 Website: [nanosaur.ai](https://nanosaur.ai)
 * 🦄 Do you need any help? [Discord](https://discord.gg/rCHgeUpUj9)
 * 🧰 For technical details follow [wiki](https://github.com/rnanosaur/nanosaur/wiki)
-* 🐳 nanosaur [Docker hub](https://hub.docker.com/u/nanosaur)
+* 🐳 nanosaur [Docker Hub](https://hub.docker.com/u/nanosaur)
 * ⁉️ Something wrong? Open an [issue](https://github.com/rnanosaur/nanosaur/issues)
 <!-- INTRO END -->
 <!-- LICENSE START -->
@@ -29,5 +29,5 @@ For more information about this project, please follow [nanosaur.ai/about](https
 <!-- CREDITS START -->
 ## Contact Information
 
-For any questions or inquiries, please get in touch with us at [raffaello@nanosaur.ai](mailto:raffaello@nanosaur.ai).
+If you have any questions or inquiries, please contact us at [raffaello@nanosaur.ai](mailto:raffaello@nanosaur.ai).
 <!-- CREDITS END -->
