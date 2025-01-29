@@ -36,8 +36,8 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    <license>MIT</license>
 
    <url type="website">https://nanosaur.ai/</url>
-   <url type="repository">https://github.com/rnanosaur/nanosaur_simulations</url>
-   <url type="bugtracker">https://github.com/rnanosaur/nanosaur_simulations/issues</url>
+   <url type="repository">https://github.com/rnanosaur/nanosaur_simulation</url>
+   <url type="bugtracker">https://github.com/rnanosaur/nanosaur_simulation/issues</url>
 
    <buildtool_depend>ament_cmake</buildtool_depend>
 

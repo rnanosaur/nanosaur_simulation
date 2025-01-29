@@ -96,7 +96,7 @@ def generate_launch_description():
         description='Lidar type to use. Options: empty, LD06.')
 
     # full  path to urdf and world file
-    # world = os.path.join(nanosaur_simulations, "worlds", world_file_name)
+    # world = os.path.join(nanosaur_simulation, "worlds", world_file_name)
     default_xacro_path = os.path.join(
         package_gazebo, "urdf", "nanosaur.gazebo.xacro")
 

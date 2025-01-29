@@ -48,11 +48,11 @@ WORKDIR $ROS_WS
 # Change the user to non-root
 RUN chown -R ${USERNAME}:${USERNAME} /isaac-sim
 
-# Copy the nanosaur_simulations packages into the workspace
+# Copy the nanosaur_simulation packages into the workspace
 COPY shared_src src/
 COPY simulation_ws/src src/
 # Copy scripts
-RUN cp ${ROS_WS}/src/nanosaur_simulations/scripts/isaacsim_entrypoint.sh /entrypoint.sh
+RUN cp ${ROS_WS}/src/nanosaur_simulation/scripts/isaacsim_entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Install dependencies

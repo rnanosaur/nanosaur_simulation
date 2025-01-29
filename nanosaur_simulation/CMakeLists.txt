@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project(nanosaur_simulations)
+project(nanosaur_simulation)
 
 ################################################################################
 # Find ament packages and libraries for ament and system dependencies
