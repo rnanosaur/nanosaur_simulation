@@ -24,7 +24,7 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-FROM nvcr.io/nvidia/isaac-sim:4.2.0
+FROM nvcr.io/nvidia/isaac-sim:4.5.0
 
 # Install ROS 2 Humble
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
@@ -60,7 +60,7 @@ RUN apt-get update && apt-get install -y \
     gosu sudo \
     python3-colcon-common-extensions && \
     rosdep update && \
-    rosdep install --from-paths src --ignore-src -r -y && \
+    rosdep install --from-paths src --ignore-src -r --skip-keys "rviz2 ros-gz-sim ros-gz-bridge" -y && \
     rm -rf /var/lib/apt/lists/*
 # Compile the workspace
 
