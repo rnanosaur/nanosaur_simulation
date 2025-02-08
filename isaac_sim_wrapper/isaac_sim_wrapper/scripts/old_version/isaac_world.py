@@ -29,9 +29,9 @@ import carb
 import contextlib
 import rclpy
 from isaacsim import SimulationApp
-from isaacsim.core.api import World, SimulationContext
-from isaacsim.core.utils import stage, nucleus
-from isaacsim.core.utils.stage import is_stage_loading
+from omni.isaac.core import World, SimulationContext
+from omni.isaac.core.utils import stage, nucleus
+from omni.isaac.core.utils.stage import is_stage_loading
 from omni.kit import commands
 from omni.graph.core import Controller, GraphPipelineStage
 from rclpy.node import Node
@@ -57,15 +57,25 @@ def build_clock_graph():
         },
         {
             Controller.Keys.CREATE_NODES: [
-                ("ReadSimTime", "isaacsim.core.nodes.IsaacReadSimulationTime"),
                 ("OnPlaybackTick", "omni.graph.action.OnPlaybackTick"),
-                ("PublishClock", "isaacsim.ros2.bridge.ROS2PublishClock"),
+                (
+                    "IsaacReadSimulationTime",
+                    "omni.isaac.core_nodes.IsaacReadSimulationTime",
+                ),
+                (
+                    "ROS2PublishClock",
+                    "omni.isaac.ros2_bridge.ROS2PublishClock",
+                ),
             ],
             Controller.Keys.CONNECT: [
-                # Connecting execution of OnPlaybackTick node to PublishClock to automatically publish each frame
-                ("OnPlaybackTick.outputs:tick", "PublishClock.inputs:execIn"),
-                # Connecting simulationTime data of ReadSimTime to the clock publisher nodes
-                ("ReadSimTime.outputs:simulationTime", "PublishClock.inputs:timeStamp"),
+                (
+                    "OnPlaybackTick.outputs:tick",
+                    "ROS2PublishClock.inputs:execIn",
+                ),
+                (
+                    "IsaacReadSimulationTime.outputs:simulationTime",
+                    "ROS2PublishClock.inputs:timeStamp",
+                ),
             ],
         },
     )
@@ -206,8 +216,7 @@ class IsaacWorld(Node):
             self._simulation_context = World(stage_units_in_meters=1.0)
             self._simulation_context.scene.add_default_ground_plane()
             # need to initialize physics getting any articulation..etc
-            # NOT NEEDED ANYMORE FROM 4.5.0
-            # self._simulation_context.initialize_physics()
+            self._simulation_context.initialize_physics()
         # Build clock graph
         try:
             build_clock_graph()

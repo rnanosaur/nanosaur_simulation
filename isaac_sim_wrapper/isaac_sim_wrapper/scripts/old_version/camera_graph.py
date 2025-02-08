@@ -29,8 +29,8 @@ import omni.usd as usd
 
 from rclpy.node import Node
 from isaacsim import SimulationApp
-from isaacsim.core.utils import stage
-from isaacsim.core.utils.prims import set_targets
+from omni.isaac.core.utils import stage
+from omni.isaac.core.utils.prims import set_targets
 from omni.graph.core import Controller, GraphPipelineStage
 from omni.kit.viewport.window import get_viewport_window_instances
 from pxr import Gf, UsdGeom
@@ -141,12 +141,12 @@ class CameraGraph:
             {
                 Controller.Keys.CREATE_NODES: [
                     ("OnTick", "omni.graph.action.OnTick"),
-                    ("createViewport", "isaacsim.core.nodes.IsaacCreateViewport"),
-                    ("getRenderProduct", "isaacsim.core.nodes.IsaacGetViewportRenderProduct"),
-                    ("setViewportResolution", "isaacsim.core.nodes.IsaacSetViewportResolution"),
-                    ("setCamera", "isaacsim.core.nodes.IsaacSetCameraOnRenderProduct"),
-                    ("cameraHelper", "isaacsim.ros2.bridge.ROS2CameraHelper"),
-                    ("cameraHelperInfo", "isaacsim.ros2.bridge.ROS2CameraInfoHelper"),
+                    ("createViewport", "omni.isaac.core_nodes.IsaacCreateViewport"),
+                    ("getRenderProduct", "omni.isaac.core_nodes.IsaacGetViewportRenderProduct"),
+                    ("setViewportResolution", "omni.isaac.core_nodes.IsaacSetViewportResolution"),
+                    ("setCamera", "omni.isaac.core_nodes.IsaacSetCameraOnRenderProduct"),
+                    ("cameraHelper", "omni.isaac.ros2_bridge.ROS2CameraHelper"),
+                    ("cameraHelperInfo", "omni.isaac.ros2_bridge.ROS2CameraInfoHelper"),
                     ],
                 Controller.Keys.CONNECT: [
                     ("OnTick.outputs:tick", "createViewport.inputs:execIn"),

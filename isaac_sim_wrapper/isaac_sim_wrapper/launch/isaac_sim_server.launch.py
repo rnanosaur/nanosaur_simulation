@@ -52,11 +52,19 @@ def launch_setup(context: LaunchContext, support_isaac_sim_path, support_config_
         with open(version_file_path, 'r') as version_file:
             version_content = version_file.read().strip().split('-')[0]
     else:
-        version_content = "Unknown"
+        print(f"Could not find the VERSION file in {isaac_sim_path}")
+        print("Please make sure that the Isaac Sim folder is correct.")
+        exit(1)
 
     print(f"Run Isaac Sim {version_content} from {isaac_sim_path} in {renderer} mode with headless={headless}")
     # Path Launcher Isaac Sim
     isaac_sim_wrapper_launcher = os.path.join(package_isaac_sim, "scripts", "isaac_sim_robot_launcher.py")
+    # Check if the version is less than 4.5.0
+    if version_content < '4.5.0':
+        print(f"Warning: The version of Isaac Sim ({version_content}) is less than 4.5.0. Some features may not be available.")
+        # Path Launcher Isaac Sim
+        isaac_sim_wrapper_launcher = os.path.join(package_isaac_sim, "scripts", "old_version", "isaac_sim_robot_launcher.py")
+
     # Command to start Isaac Sim
     command = [f"{isaac_sim_path}/python.sh", isaac_sim_wrapper_launcher, "--renderer", renderer]
     if headless:

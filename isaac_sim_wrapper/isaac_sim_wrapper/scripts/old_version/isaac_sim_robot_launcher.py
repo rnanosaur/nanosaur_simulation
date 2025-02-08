@@ -68,11 +68,11 @@ def initialize_simulation_app(
     simulation_config = default_config | config
     simulation_app = SimulationApp(simulation_config)
     # Load extensions
-    from isaacsim.core.utils.extensions import enable_extension # type: ignore
+    from omni.isaac.core.utils.extensions import enable_extension # type: ignore
     if webrtc:
         enable_webrtc(simulation_app, enable_extension)
     # enable ROS2 bridge extension
-    enable_extension("isaacsim.ros2.bridge")
+    enable_extension("omni.isaac.ros2_bridge")
     simulation_app.update()
     return simulation_app
 

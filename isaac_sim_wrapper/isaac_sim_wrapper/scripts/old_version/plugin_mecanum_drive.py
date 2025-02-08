@@ -156,9 +156,9 @@ class PluginMecanumDrive:
             {
                 Controller.Keys.CREATE_NODES: [
                     ("onPlaybackTick", "omni.graph.action.OnPlaybackTick"),
-                    ("context", "isaacsim.ros2.bridge.ROS2Context"),
-                    ("subscribeTwist", "isaacsim.ros2.bridge.ROS2SubscribeTwist"),
-                    ("scaleToFromStage", "isaacsim.core.nodes.OgnIsaacScaleToFromStageUnit"),
+                    ("context", "omni.isaac.ros2_bridge.ROS2Context"),
+                    ("subscribeTwist", "omni.isaac.ros2_bridge.ROS2SubscribeTwist"),
+                    ("scaleToFromStage", "omni.isaac.core_nodes.OgnIsaacScaleToFromStageUnit"),
                     ("breakAngVel", "omni.graph.nodes.BreakVector3"),
                     ("breakLinVel", "omni.graph.nodes.BreakVector3"),
                     ("angvelGain", "omni.graph.nodes.ConstantDouble"),
@@ -169,7 +169,7 @@ class PluginMecanumDrive:
                     ("linYMult", "omni.graph.nodes.Multiply"),
                     ("velVec3", "omni.graph.nodes.MakeVector3"),
                     ("mecanumAng", "omni.graph.nodes.ConstructArray"),
-                    ("holonomicCtrl", "isaacsim.robot.wheeled_robots.HolonomicController"),
+                    ("holonomicCtrl", "omni.isaac.wheeled_robots.HolonomicController"),
 
                     ("upAxis", "omni.graph.nodes.ConstantDouble3"),
                     ("wheelAxis", "omni.graph.nodes.ConstantDouble3"),
@@ -177,7 +177,7 @@ class PluginMecanumDrive:
                     ("wheelPosition", "omni.graph.nodes.ConstructArray"),   
                     ("wheelRadius", "omni.graph.nodes.ConstructArray"),   
                     ("jointNames", "omni.graph.nodes.ConstructArray"),   
-                    ("articulation", "isaacsim.core.nodes.IsaacArticulationController"),
+                    ("articulation", "omni.isaac.core_nodes.IsaacArticulationController"),
                     ],
                 Controller.Keys.CONNECT: [
                     ("onPlaybackTick.outputs:tick", "subscribeTwist.inputs:execIn"),
@@ -293,11 +293,11 @@ class PluginMecanumDrive:
             {
                 Controller.Keys.CREATE_NODES: [
                     ("onPlaybackTick", "omni.graph.action.OnPlaybackTick"),
-                    ("context", "isaacsim.ros2.bridge.ROS2Context"),
-                    ("readSimTime", "isaacsim.core.nodes.IsaacReadSimulationTime"),
-                    ("computeOdom", "isaacsim.core.nodes.IsaacComputeOdometry"),
-                    ("publishOdom", "isaacsim.ros2.bridge.ROS2PublishOdometry"),
-                    ("publishRawTF", "isaacsim.ros2.bridge.ROS2PublishRawTransformTree"),
+                    ("context", "omni.isaac.ros2_bridge.ROS2Context"),
+                    ("readSimTime", "omni.isaac.core_nodes.IsaacReadSimulationTime"),
+                    ("computeOdom", "omni.isaac.core_nodes.IsaacComputeOdometry"),
+                    ("publishOdom", "omni.isaac.ros2_bridge.ROS2PublishOdometry"),
+                    ("publishRawTF", "omni.isaac.ros2_bridge.ROS2PublishRawTransformTree"),
                 ],
                 Controller.Keys.SET_VALUES: [
                     ("context.inputs:domain_id", self._domain_id),

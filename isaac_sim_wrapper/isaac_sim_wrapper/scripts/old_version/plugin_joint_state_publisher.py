@@ -26,7 +26,7 @@
 
 from rclpy.node import Node
 from isaacsim import SimulationApp
-from isaacsim.core.nodes.scripts.utils import set_target_prims
+from omni.isaac.core_nodes.scripts.utils import set_target_prims
 from omni.graph.core import Controller, GraphPipelineStage
 from omni.kit import commands
 from pxr import Sdf
@@ -113,9 +113,9 @@ class PluginJointStatePublisher:
             {
                 Controller.Keys.CREATE_NODES: [
                     ("OnPlaybackTick", "omni.graph.action.OnPlaybackTick"),
-                    ("ROS2Context", "isaacsim.ros2.bridge.ROS2Context"),
-                    ("ROS2PublishTransformTree", "isaacsim.ros2.bridge.ROS2PublishTransformTree"),
-                    ("IsaacReadSimulationTime", "isaacsim.core.nodes.IsaacReadSimulationTime"),
+                    ("ROS2Context", "omni.isaac.ros2_bridge.ROS2Context"),
+                    ("ROS2PublishTransformTree", "omni.isaac.ros2_bridge.ROS2PublishTransformTree"),
+                    ("IsaacReadSimulationTime", "omni.isaac.core_nodes.IsaacReadSimulationTime"),
                     ],
                 Controller.Keys.CONNECT: [
                     ("OnPlaybackTick.outputs:tick", "ROS2PublishTransformTree.inputs:execIn"),
