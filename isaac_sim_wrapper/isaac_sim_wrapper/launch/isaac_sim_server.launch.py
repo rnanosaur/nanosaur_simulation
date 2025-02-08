@@ -31,7 +31,7 @@ from launch.substitutions import LaunchConfiguration
 from launch.actions import ExecuteProcess, DeclareLaunchArgument, OpaqueFunction
 
 
-def launch_setup(context: LaunchContext, support_isaac_sim_path, support_config_file_path, support_renderer, support_headless, support_webrtc):
+def launch_setup(context: LaunchContext, support_isaac_sim_path, support_config_file_path, support_renderer, support_headless, support_livestream):
     # Get the package share directory
     package_isaac_sim = get_package_share_directory('isaac_sim_wrapper')
     # Get the path to the Isaac Sim folder
@@ -39,13 +39,13 @@ def launch_setup(context: LaunchContext, support_isaac_sim_path, support_config_
     config_file_path = context.perform_substitution(support_config_file_path)
     renderer = context.perform_substitution(support_renderer)
     headless = context.perform_substitution(support_headless).lower() == 'true'
-    webrtc = context.perform_substitution(support_webrtc).lower() == 'true'
+    livestream = context.perform_substitution(support_livestream).lower() == 'true'
     # Check if the environment variable SIMULATION_HEADLESS is set to true
     # This variable overrides the headless argument passed to the launch file
     if 'SIMULATION_HEADLESS' in os.environ:
-        print("Environment variable SIMULATION_HEADLESS is set to true. Running in headless mode with webRTC enabled.")
+        print("Environment variable SIMULATION_HEADLESS is set to true. Running in headless mode with livestream enabled.")
         headless = os.getenv('SIMULATION_HEADLESS', 'false').lower() == 'true'
-        webrtc = os.getenv('SIMULATION_HEADLESS', 'false').lower() == 'true'
+        livestream = os.getenv('SIMULATION_HEADLESS', 'false').lower() == 'true'
     # Read the VERSION file from the isaac_sim_folder
     version_file_path = os.path.join(isaac_sim_path, 'VERSION')
     if os.path.exists(version_file_path):
@@ -69,8 +69,8 @@ def launch_setup(context: LaunchContext, support_isaac_sim_path, support_config_
     command = [f"{isaac_sim_path}/python.sh", isaac_sim_wrapper_launcher, "--renderer", renderer]
     if headless:
         command += ["--headless"]
-    if webrtc:
-        command += ["--webrtc"]
+    if livestream:
+        command += ["--livestream"]
     # Add the configuration file if it exists
     if config_file_path:
         print(f"Load configuration file {config_file_path}")
@@ -120,23 +120,23 @@ def generate_launch_description():
     
     headless = LaunchConfiguration('headless')
     
-    # Default WebRTC address:
-    # http://localhost:8211/streaming/webrtc-client/
-    webrtc_cmd = DeclareLaunchArgument(
-        name='webrtc',
+    # Follow documentation for livestream
+    # https://docs.isaacsim.omniverse.nvidia.com/latest/installation/manual_livestream_clients.html
+    livestream_cmd = DeclareLaunchArgument(
+        name='livestream',
         default_value='false',
-        description='Enable WebRTC'
+        description='Enable livestream'
     )
 
-    webrtc = LaunchConfiguration('webrtc')
+    livestream = LaunchConfiguration('livestream')
     
     ld = LaunchDescription()
     ld.add_action(isaac_sim_path_cmd)
     ld.add_action(config_file_path_cmd)
     ld.add_action(renderer_cmd)
     ld.add_action(headless_cmd)
-    ld.add_action(webrtc_cmd)
-    ld.add_action(OpaqueFunction(function=launch_setup, args=[isaac_sim_path, config_file_path, renderer, headless, webrtc]))
+    ld.add_action(livestream_cmd)
+    ld.add_action(OpaqueFunction(function=launch_setup, args=[isaac_sim_path, config_file_path, renderer, headless, livestream]))
     
     return ld
 # EOF

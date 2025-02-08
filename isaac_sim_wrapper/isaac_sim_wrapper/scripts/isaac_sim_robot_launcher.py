@@ -35,7 +35,7 @@ from isaacsim import SimulationApp
 def initialize_simulation_app(
                         renderer: str = "RayTracedLighting",
                         headless: bool = False,
-                        webrtc: bool = False,
+                        livestream: bool = False,
                         file_path: str ="config.yaml"):
     """Initialize the Simulation Application."""
     # Build simulation config
@@ -44,8 +44,8 @@ def initialize_simulation_app(
         "headless": headless,
         "hide_ui": False,  # Show the GUI
     }
-    # WebRTC configuration
-    webrtc_config = {
+    # Livestream configuration
+    livestream_config = {
         "width": 1280,
         "height": 720,
         "window_width": 1920,
@@ -55,8 +55,8 @@ def initialize_simulation_app(
         "renderer": renderer,
         "display_options": 3286,  # Set display options to show default grid
     }
-        
-    default_config = webrtc_config if webrtc else standard_config
+    
+    default_config = livestream_config if livestream else standard_config
     # load file
     try:
         with open(file_path, 'r') as file:
@@ -69,23 +69,22 @@ def initialize_simulation_app(
     simulation_app = SimulationApp(simulation_config)
     # Load extensions
     from isaacsim.core.utils.extensions import enable_extension # type: ignore
-    if webrtc:
-        enable_webrtc(simulation_app, enable_extension)
+    if livestream:
+        enable_livestream(simulation_app, enable_extension)
     # enable ROS2 bridge extension
     enable_extension("isaacsim.ros2.bridge")
     simulation_app.update()
     return simulation_app
 
 
-def enable_webrtc(simulation_app, enable_extension):
+def enable_livestream(simulation_app, enable_extension):
     print("Enable WebRTC streaming")
     # Default Livestream settings
     simulation_app.set_setting("/app/window/drawMouse", True)
-    simulation_app.set_setting("/app/livestream/proto", "ws")
-    simulation_app.set_setting("/ngx/enabled", False)
     # Enable WebRTC Livestream extension
-    # Default URL: http://localhost:8211/streaming/webrtc-client/
-    enable_extension("omni.services.streamclient.webrtc")
+    enable_extension("omni.kit.livestream.webrtc")
+    # Follow the documentation and install
+    # https://docs.isaacsim.omniverse.nvidia.com/latest/installation/manual_livestream_clients.html
 
 
 def main():
@@ -114,15 +113,15 @@ def main():
     )
 
     parser.add_argument(
-        "--webrtc",
+        "--livestream",
         action="store_true",
-        help="Enable WebRTC streaming"
+        help="Enable live streaming"
     )
 
     # Parse the arguments
     args = parser.parse_args()
     # Load Isaac Sim with ROS 2 extension enabled
-    simulation_app = initialize_simulation_app(renderer=args.renderer, headless=args.headless, webrtc=args.webrtc, file_path=args.file_path)
+    simulation_app = initialize_simulation_app(renderer=args.renderer, headless=args.headless, livestream=args.livestream, file_path=args.file_path)
     # Load the Isaac World library
     import isaac_world
     # Start ros 2 Isaac World controller
