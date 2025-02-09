@@ -42,7 +42,8 @@ ENV USERNAME=${USERNAME}
 
 # Create a workspace
 ENV ROS_WS=/ros_ws
-RUN mkdir -p $ROS_WS/src
+RUN mkdir -p $ROS_WS/src && \
+    chown -R ${USERNAME}:${USERNAME} $ROS_WS
 WORKDIR $ROS_WS
 
 # Change the user to non-root
@@ -65,6 +66,7 @@ RUN apt-get update && apt-get install -y \
 # Compile the workspace
 
 RUN . /opt/ros/$ROS_DISTRO/setup.sh && \
+    gosu ${USERNAME} \
     colcon build && \
     rm -R $ROS_WS/build $ROS_WS/src $ROS_WS/log
 
