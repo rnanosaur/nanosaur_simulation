@@ -93,8 +93,8 @@ class PluginJointStatePublisher:
         # FIX Isaac Sim - Change stiffness and damping
         if self._fix_joint_physic:
             for joint in self._joints:
-                commands.execute('ChangeProperty', prop_path=Sdf.Path(f"/{self._robot_name}/{self._base_link}/{joint}.drive:angular:physics:damping"), value=17453.0, prev=0.0)
-                commands.execute('ChangeProperty', prop_path=Sdf.Path(f"/{self._robot_name}/{self._base_link}/{joint}.drive:angular:physics:stiffness"), value=0.0, prev=0.0)
+                commands.execute('ChangeProperty', prop_path=Sdf.Path(f"/{self._robot_name}/joints/{joint}.drive:angular:physics:damping"), value=17453.0, prev=0.0)
+                commands.execute('ChangeProperty', prop_path=Sdf.Path(f"/{self._robot_name}/joints/{joint}.drive:angular:physics:stiffness"), value=0.0, prev=0.0)
         # Build action graph
         try:
             self._load_og()
