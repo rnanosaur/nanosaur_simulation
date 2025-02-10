@@ -33,7 +33,7 @@ from launch_ros.actions import Node
 from launch.substitutions import Command
 
 
-def launch_setup(context: LaunchContext, support_robot_name, support_camera_type, support_lidar_type):
+def launch_setup(context: LaunchContext, support_robot_name, support_camera_type, support_lidar_type, support_rollers):
     """ Reference:
         https://answers.ros.org/question/396345/ros2-launch-file-how-to-convert-launchargument-to-string/ 
         https://github.com/UniversalRobots/Universal_Robots_ROS2_Driver/blob/main/ur_moveit_config/launch/ur_moveit.launch.py
@@ -42,6 +42,7 @@ def launch_setup(context: LaunchContext, support_robot_name, support_camera_type
     robot_name = context.perform_substitution(support_robot_name)
     camera_type = context.perform_substitution(support_camera_type)
     lidar_type = context.perform_substitution(support_lidar_type)
+    rollers = context.perform_substitution(support_rollers)
 
     use_sim_time = LaunchConfiguration('use_sim_time')
     xacro_path = LaunchConfiguration('xacro_path')
@@ -61,6 +62,7 @@ def launch_setup(context: LaunchContext, support_robot_name, support_camera_type
                             'robot_name:=', robot_name, ' ',
                             'camera_type:=', camera_type, ' ',
                             'lidar_type:=', lidar_type, ' ',
+                            'rollers:=', rollers, ' ',
                             'publish_pointcloud:=', publish_pointcloud, ' ',
                         ])
                     }]
@@ -74,6 +76,7 @@ def generate_launch_description():
     robot_name = LaunchConfiguration('robot_name')
     camera_type = LaunchConfiguration('camera_type')
     lidar_type = LaunchConfiguration('lidar_type')
+    rollers = LaunchConfiguration('rollers')
 
     use_sim_time_cmd = DeclareLaunchArgument(
         name='use_sim_time',
@@ -95,6 +98,11 @@ def generate_launch_description():
         default_value='empty',
         description='Lidar type to use. Options: empty, LD06.')
 
+    declare_rollers_cmd = DeclareLaunchArgument(
+        name='rollers',
+        default_value='false',
+        description='Flag to enable rollers on the mecanum wheels for a more detailed simulation.')
+
     # full  path to urdf and world file
     # world = os.path.join(nanosaur_simulation, "worlds", world_file_name)
     default_xacro_path = os.path.join(
@@ -110,8 +118,9 @@ def generate_launch_description():
     ld.add_action(nanosaur_cmd)
     ld.add_action(declare_camera_type_cmd)
     ld.add_action(declare_lidar_type_cmd)
+    ld.add_action(declare_rollers_cmd)
     ld.add_action(declare_model_path_cmd)
-    ld.add_action(OpaqueFunction(function=launch_setup, args=[robot_name, camera_type, lidar_type]))
+    ld.add_action(OpaqueFunction(function=launch_setup, args=[robot_name, camera_type, lidar_type, rollers]))
 
     return ld
 # EOF

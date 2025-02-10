@@ -11,6 +11,7 @@
     <!-- camera definitions -->
     <xacro:arg name="camera_type" default="empty" /> <!--options: empty, realsense, zedmini -->
     <xacro:arg name="lidar_type" default="empty" /> <!--options: empty, LD06 -->
+    <xacro:arg name="rollers" default="false" /> <!--options: true, false -->
     <xacro:property name="camera_type_name" value="$(arg camera_type)" />
 
     <xacro:arg name="publish_pointcloud"  default="false"/>
@@ -21,6 +22,7 @@
     <xacro:nanosaur
             camera_type="$(arg camera_type)"
             lidar_type="$(arg lidar_type)"
+            rollers="$(arg rollers)"
             use_nominal_extrinsics="true" />
 
     <!-- nanosaur mecanum wheel drive controller -->

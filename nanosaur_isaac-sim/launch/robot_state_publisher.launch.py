@@ -47,6 +47,7 @@ def launch_setup(context: LaunchContext, support_package):
     xacro_path = LaunchConfiguration('xacro_path')
     camera_type = LaunchConfiguration('camera_type')
     lidar_type = LaunchConfiguration('lidar_type')
+    rollers = LaunchConfiguration('rollers')
     # Add option to publish pointcloud
     publish_pointcloud = "False"
 
@@ -63,6 +64,7 @@ def launch_setup(context: LaunchContext, support_package):
                             'robot_name:=', robot_name, ' ',
                             'camera_type:=', camera_type, ' ',
                             'lidar_type:=', lidar_type, ' ',
+                            'rollers:=', rollers, ' ',
                             'publish_pointcloud:=', publish_pointcloud, ' ',
                         ])
                     }]
@@ -96,6 +98,11 @@ def generate_launch_description():
         default_value='empty',
         description='Lidar type to use. Options: empty, LD06.')
 
+    declare_rollers_cmd = DeclareLaunchArgument(
+        name='rollers',
+        default_value='false',
+        description='Flag to enable rollers on the mecanum wheels for a more detailed simulation.')
+
     # full  path to urdf and world file
     default_xacro_path = os.path.join(package_isaac_sim, "urdf", "nanosaur.isaac.xacro")
 
@@ -122,6 +129,7 @@ def generate_launch_description():
     ld.add_action(nanosaur_cmd)
     ld.add_action(declare_camera_type_cmd)
     ld.add_action(declare_lidar_type_cmd)
+    ld.add_action(declare_rollers_cmd)
     ld.add_action(declare_model_path_cmd)
     # Wait Isaac Sim server start before to load robot
     # https://docs.ros.org/en/humble/Tutorials/Intermediate/Launch/Using-Event-Handlers.html
