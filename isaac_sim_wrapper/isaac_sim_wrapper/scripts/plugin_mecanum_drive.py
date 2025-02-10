@@ -125,7 +125,7 @@ class PluginMecanumDrive:
             'wheel_offset_z': float(plugin_data.findtext("wheel_offset_z", 0.0)),
             'mecanum_angles': float(plugin_data.findtext("mecanum_angles", 45.0)),
             'linear_gain': float(plugin_data.findtext("linear_gain", 1.0)),
-            'angular_gain': float(plugin_data.findtext("angular_gain", 1.0)),
+            'angular_gain': float(plugin_data.findtext("angular_gain", 1.0/10.0)),
             'max_wheel_speed': float(plugin_data.findtext("max_wheel_speed", 1000.0)),
             'topic_name': plugin_data.findtext("topic_name", "cmd_vel"),
             'publish_odom': plugin_data.findtext("publish_odom", "false").lower() == "true",
