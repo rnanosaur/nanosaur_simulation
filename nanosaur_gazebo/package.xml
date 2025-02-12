@@ -31,11 +31,11 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
    <version>2.0.0</version>
    <description>Run nanosaur on gazebo simulator</description>
 
-   <author email="raffaello@rnext.it">Raffaello Bonghi</author>
-   <maintainer email="raffaello@rnext.it">Raffaello Bonghi</maintainer>
+   <author email="raffaello@nanosaur.ai">Raffaello Bonghi</author>
+   <maintainer email="raffaello@nanosaur.ai">Raffaello Bonghi</maintainer>
    <license>MIT</license>
 
-   <url type="website">https://nanosaur.ai/</url>
+   <url type="website">https://nanosaur.ai</url>
    <url type="repository">https://github.com/rnanosaur/nanosaur_simulation</url>
    <url type="bugtracker">https://github.com/rnanosaur/nanosaur_simulation/issues</url>
 
