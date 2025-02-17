@@ -41,16 +41,6 @@ def launch_setup(context: LaunchContext, support_world, support_isaac_sim_path, 
     renderer = context.perform_substitution(support_renderer)
     headless = context.perform_substitution(support_headless).lower() == 'true'
     livestream = context.perform_substitution(support_livestream).lower() == 'true'
-    # Check if the environment variable SIMULATION_IN_DOCKER is set
-    # This variable overrides the livestream argument passed to the launch file
-    if 'SIMULATION_IN_DOCKER' in os.environ:
-        print("[WARNING] Docker environment detected.")
-        # Headless mode is forced to true in Docker
-        headless = True
-        livestream = True
-        if 'SIMULATION_HEADLESS' in os.environ:
-            livestream = os.getenv('SIMULATION_HEADLESS', 'false').lower() != 'true'
-        print(f"Docker environment detected. Livestream is set to {livestream}.")
     # Read the VERSION file from the isaac_sim_folder
     version_file_path = os.path.join(isaac_sim_path, 'VERSION')
     if os.path.exists(version_file_path):
@@ -99,7 +89,7 @@ def generate_launch_description():
 
     world_cmd = DeclareLaunchArgument(
         name='world',
-        default_value='lab', # Empty world: empty
+        default_value='',
         description='Simulation world name.')
     
     world = LaunchConfiguration('world')

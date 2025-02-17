@@ -48,14 +48,6 @@ from plugin_mecanum_drive import PluginMecanumDrive
 PACKAGE_RE = re.compile(r'package://([^/]+)/')
 BACKGROUND_STAGE_PATH = "/background"
 
-# Convert name to stage path
-WORLD_NAME_MAP = {
-    "empty": "",
-    "lab": "/Isaac/Environments/Simple_Room/simple_room.usd",
-    "office": "/Isaac/Environments/Office/office.usd",
-    "warehouse": "/Isaac/Environments/Simple_Warehouse/warehouse.usd",
-}
-
 
 def build_clock_graph():
     Controller.edit(
@@ -194,7 +186,7 @@ class IsaacRobotSpawner(Node):
 
 class IsaacWorld(Node):
 
-    def __init__(self, simulation_app: SimulationApp, world: str):
+    def __init__(self, simulation_app: SimulationApp, stage_path: str):
         super().__init__('isaac_world')
         self._simulation_app = simulation_app
         # Default domain id for this simulation
@@ -202,8 +194,7 @@ class IsaacWorld(Node):
         # List of all robot spawner
         self._robot_spawner = []
         # Load stage from world name
-        self.get_logger().info(f"Load world: {world}")
-        if stage_path := WORLD_NAME_MAP.get(world, ''):
+        if stage_path:
             # Locate assets root folder to load sample
             assets_root_path = get_assets_root_path()
             if assets_root_path is None:

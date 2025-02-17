@@ -80,4 +80,4 @@ STOPSIGNAL SIGINT
 # Set the entrypoint
 ENTRYPOINT [ "/entrypoint.sh" ]
 # Set the default command
-CMD [ "ros2", "launch", "isaac_sim_wrapper", "isaac_sim_server.launch.py" ]
+CMD [ "ros2", "launch", "nanosaur_isaac-sim", "isaac_sim.launch.py" ]
