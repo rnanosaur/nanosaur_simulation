@@ -52,6 +52,9 @@ RUN . /opt/ros/$ROS_DISTRO/setup.sh && \
     colcon build && \
     rm -R $ROS_WS/build $ROS_WS/src $ROS_WS/log
 
+# Set the simulation in Docker environment variable
+ENV SIMULATION_IN_DOCKER=1
+
 # https://docs.docker.com/engine/reference/builder/#stopsignal
 # https://hynek.me/articles/docker-signals/
 STOPSIGNAL SIGINT

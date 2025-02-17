@@ -26,6 +26,12 @@
 
 FROM nvcr.io/nvidia/isaac-sim:4.5.0
 
+# Specify non-root admin user for container
+ARG USERNAME=ubuntu
+ENV USERNAME=${USERNAME}
+# Change the user to non-root
+RUN chown -R ${USERNAME}:${USERNAME} /isaac-sim
+
 # Install ROS 2 Humble
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     apt-get install -y curl gnupg2 lsb-release && \
@@ -35,19 +41,13 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y ros-humble-ros-base ros-dev-tools && sudo rosdep init && \
     rm -rf /var/lib/apt/lists/*
 
+# Set the ROS distro
 ENV ROS_DISTRO=humble
-# Specify non-root admin user for container
-ARG USERNAME=ubuntu
-ENV USERNAME=${USERNAME}
-
 # Create a workspace
 ENV ROS_WS=/ros_ws
 RUN mkdir -p $ROS_WS/src && \
     chown -R ${USERNAME}:${USERNAME} $ROS_WS
 WORKDIR $ROS_WS
-
-# Change the user to non-root
-RUN chown -R ${USERNAME}:${USERNAME} /isaac-sim
 
 # Copy the nanosaur_simulation packages into the workspace
 COPY shared_src src/
@@ -69,6 +69,9 @@ RUN . /opt/ros/$ROS_DISTRO/setup.sh && \
     gosu ${USERNAME} \
     colcon build && \
     rm -R $ROS_WS/build $ROS_WS/src $ROS_WS/log
+
+# Set the simulation in Docker environment variable
+ENV SIMULATION_IN_DOCKER=1
 
 # https://docs.docker.com/engine/reference/builder/#stopsignal
 # https://hynek.me/articles/docker-signals/

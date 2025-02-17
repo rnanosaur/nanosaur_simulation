@@ -41,12 +41,16 @@ def launch_setup(context: LaunchContext, support_world, support_isaac_sim_path, 
     renderer = context.perform_substitution(support_renderer)
     headless = context.perform_substitution(support_headless).lower() == 'true'
     livestream = context.perform_substitution(support_livestream).lower() == 'true'
-    # Check if the environment variable SIMULATION_HEADLESS is set to true
-    # This variable overrides the headless argument passed to the launch file
-    if 'SIMULATION_HEADLESS' in os.environ:
-        print("Environment variable SIMULATION_HEADLESS is set to true. Running in headless mode with livestream enabled.")
-        headless = os.getenv('SIMULATION_HEADLESS', 'false').lower() == 'true'
-        livestream = os.getenv('SIMULATION_HEADLESS', 'false').lower() == 'true'
+    # Check if the environment variable SIMULATION_IN_DOCKER is set
+    # This variable overrides the livestream argument passed to the launch file
+    if 'SIMULATION_IN_DOCKER' in os.environ:
+        print("[WARNING] Docker environment detected.")
+        # Headless mode is forced to true in Docker
+        headless = True
+        livestream = True
+        if 'SIMULATION_HEADLESS' in os.environ:
+            livestream = os.getenv('SIMULATION_HEADLESS', 'false').lower() != 'true'
+        print(f"Docker environment detected. Livestream is set to {livestream}.")
     # Read the VERSION file from the isaac_sim_folder
     version_file_path = os.path.join(isaac_sim_path, 'VERSION')
     if os.path.exists(version_file_path):
@@ -83,7 +87,6 @@ def launch_setup(context: LaunchContext, support_world, support_isaac_sim_path, 
             output='screen',
             shell=True
         )
-    
     return [isaac_sim]
 
 
