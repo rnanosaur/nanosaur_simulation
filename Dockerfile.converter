@@ -1,0 +1,96 @@
+# Copyright (C) 2025, Raffaello Bonghi <raffaello@rnext.it>
+# All rights reserved
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 1. Redistributions of source code must retain the above copyright 
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+# 3. Neither the name of the copyright holder nor the names of its 
+#    contributors may be used to endorse or promote products derived 
+#    from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND 
+# CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, 
+# BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS 
+# FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+# HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, 
+# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; 
+# OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, 
+# WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE 
+# OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
+# EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+# Converter from sdf to usd based from gz-usd
+# https://github.com/gazebosim/gz-usd
+
+FROM ubuntu:22.04
+
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    git \
+    wget \
+    curl \
+    unzip \
+    libpyside2-dev \
+    python3-opengl \
+    cmake \
+    libglu1-mesa-dev \
+    freeglut3-dev \
+    mesa-common-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install CMake 3.22.1
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.22.1/cmake-3.22.1-linux-x86_64.sh \
+    && chmod +x cmake-3.22.1-linux-x86_64.sh \
+    && ./cmake-3.22.1-linux-x86_64.sh --skip-license --prefix=/usr/local \
+    && rm cmake-3.22.1-linux-x86_64.sh
+
+RUN git clone --depth 1 -b v24.08 https://github.com/PixarAnimationStudios/OpenUSD.git /opt/OpenUSD
+
+ENV USD_PATH=/opt/install
+RUN mkdir -p ${USD_PATH}
+
+WORKDIR /opt/OpenUSD
+
+# Build USD
+RUN python3 build_scripts/build_usd.py --build-variant release --no-tests --no-examples --no-imaging --onetbb --no-tutorials --no-docs --no-python ${USD_PATH}
+
+ENV PATH=$USD_PATH/bin:$PATH
+ENV LD_LIBRARY_PATH=$USD_PATH/lib
+ENV CMAKE_PREFIX_PATH=$USD_PATH
+
+RUN apt-get update && apt-get install -y \
+    lsb-release \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN curl -sSL https://packages.osrfoundation.org/gazebo.gpg --output /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] http://packages.osrfoundation.org/gazebo/ubuntu-stable $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/gazebo-stable.list > /dev/null \
+    && apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y ignition-fortress
+
+RUN apt-get update && apt-get install -y \
+    libgz-cmake4-dev libgz-common6-dev libgz-utils3-dev libsdformat15-dev libsdformat15 \
+    && rm -rf /var/lib/apt/lists/*
+
+ARG GZ_VERSION=fortress
+ENV GZ_VERSION=${GZ_VERSION}
+
+RUN git clone https://github.com/gazebosim/gz-usd /opt/gz-usd
+
+WORKDIR /opt/gz-usd
+RUN mkdir build && cd build \
+    && cmake .. -DCMAKE_INSTALL_PREFIX=/usr/local \
+    && make \
+    && make install
+
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+
+# Waiting reply from https://github.com/gazebosim/gz-usd/pull/10
+# how to use:
+# docker build -t nanosaur/simulation:converter -f Dockerfile.converter .
+# docker run -it --rm -v nanosaur_simulation:/simulation nanosaur/simulation:converter bash
+# SDF_PATH="models" IGN_FILE_PATH="models" sdf2usd worlds/lab.sdf lab.usd

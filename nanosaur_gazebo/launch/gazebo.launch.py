@@ -120,12 +120,10 @@ def launch_gazebo_setup(context: LaunchContext, support_world, support_headless)
     )
 
     return [ign_gazebo]
-    
+
 
 def generate_launch_description():
-    default_world_name = 'lab' # Empty world: empty
-
-    world_name = LaunchConfiguration('world_name', default=default_world_name)
+    world_name = LaunchConfiguration('world')
 
     # Set gazebo resource path
     ign_resource_path = SetEnvironmentVariable(
@@ -139,9 +137,9 @@ def generate_launch_description():
         default_value='true',
         description='Use simulation (Gazebo) clock if true')
 
-    world_name_cmd = DeclareLaunchArgument(
-        name='world_name',
-        default_value=default_world_name,
+    world_cmd = DeclareLaunchArgument(
+        name='world',
+        default_value='lab', # Empty world: empty
         description='Simulation world name.')
 
     headless_cmd = DeclareLaunchArgument(
@@ -155,7 +153,7 @@ def generate_launch_description():
     ld = LaunchDescription()
     ld.add_action(ign_resource_path)
     ld.add_action(use_sim_time_cmd)
-    ld.add_action(world_name_cmd)
+    ld.add_action(world_cmd)
     ld.add_action(headless_cmd)
     ld.add_action(OpaqueFunction(function=launch_gazebo_setup, args=[world_name, headless]))
 

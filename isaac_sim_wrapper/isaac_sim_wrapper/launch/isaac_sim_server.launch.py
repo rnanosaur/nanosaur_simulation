@@ -31,10 +31,11 @@ from launch.substitutions import LaunchConfiguration
 from launch.actions import ExecuteProcess, DeclareLaunchArgument, OpaqueFunction
 
 
-def launch_setup(context: LaunchContext, support_isaac_sim_path, support_config_file_path, support_renderer, support_headless, support_livestream):
+def launch_setup(context: LaunchContext, support_world, support_isaac_sim_path, support_config_file_path, support_renderer, support_headless, support_livestream):
     # Get the package share directory
     package_isaac_sim = get_package_share_directory('isaac_sim_wrapper')
     # Get the path to the Isaac Sim folder
+    world_name = context.perform_substitution(support_world)
     isaac_sim_path = context.perform_substitution(support_isaac_sim_path)
     config_file_path = context.perform_substitution(support_config_file_path)
     renderer = context.perform_substitution(support_renderer)
@@ -66,7 +67,7 @@ def launch_setup(context: LaunchContext, support_isaac_sim_path, support_config_
         isaac_sim_wrapper_launcher = os.path.join(package_isaac_sim, "scripts", "old_version", "isaac_sim_robot_launcher.py")
 
     # Command to start Isaac Sim
-    command = [f"{isaac_sim_path}/python.sh", isaac_sim_wrapper_launcher, "--renderer", renderer]
+    command = [f"{isaac_sim_path}/python.sh", isaac_sim_wrapper_launcher, "--renderer", renderer, "--world", world_name]
     if headless:
         command += ["--headless"]
     if livestream:
@@ -87,6 +88,18 @@ def launch_setup(context: LaunchContext, support_isaac_sim_path, support_config_
 
 
 def generate_launch_description():
+
+    use_sim_time_cmd = DeclareLaunchArgument(
+        name='use_sim_time',
+        default_value='true',
+        description='Use simulation (Gazebo) clock if true')
+
+    world_cmd = DeclareLaunchArgument(
+        name='world',
+        default_value='lab', # Empty world: empty
+        description='Simulation world name.')
+    
+    world = LaunchConfiguration('world')
 
     isaac_sim_path_cmd = DeclareLaunchArgument(
         name='isaac_sim_path',
@@ -131,12 +144,14 @@ def generate_launch_description():
     livestream = LaunchConfiguration('livestream')
     
     ld = LaunchDescription()
+    ld.add_action(use_sim_time_cmd)
+    ld.add_action(world_cmd)
     ld.add_action(isaac_sim_path_cmd)
     ld.add_action(config_file_path_cmd)
     ld.add_action(renderer_cmd)
     ld.add_action(headless_cmd)
     ld.add_action(livestream_cmd)
-    ld.add_action(OpaqueFunction(function=launch_setup, args=[isaac_sim_path, config_file_path, renderer, headless, livestream]))
+    ld.add_action(OpaqueFunction(function=launch_setup, args=[world, isaac_sim_path, config_file_path, renderer, headless, livestream]))
     
     return ld
 # EOF

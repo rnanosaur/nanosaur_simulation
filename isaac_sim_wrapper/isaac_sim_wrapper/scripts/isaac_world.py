@@ -30,8 +30,9 @@ import contextlib
 import rclpy
 from isaacsim import SimulationApp
 from isaacsim.core.api import World, SimulationContext
-from isaacsim.core.utils import stage, nucleus
 from isaacsim.core.utils.stage import is_stage_loading
+from isaacsim.storage.native import get_assets_root_path
+from omni.usd import get_context
 from omni.kit import commands
 from omni.graph.core import Controller, GraphPipelineStage
 from rclpy.node import Node
@@ -46,6 +47,14 @@ from plugin_mecanum_drive import PluginMecanumDrive
 
 PACKAGE_RE = re.compile(r'package://([^/]+)/')
 BACKGROUND_STAGE_PATH = "/background"
+
+# Convert name to stage path
+WORLD_NAME_MAP = {
+    "empty": "",
+    "lab": "/Isaac/Environments/Simple_Room/simple_room.usd",
+    "office": "/Isaac/Environments/Office/office.usd",
+    "warehouse": "/Isaac/Environments/Simple_Warehouse/warehouse.usd",
+}
 
 
 def build_clock_graph():
@@ -185,29 +194,43 @@ class IsaacRobotSpawner(Node):
 
 class IsaacWorld(Node):
 
-    def __init__(self, simulation_app: SimulationApp, stage_path: str = ""):
+    def __init__(self, simulation_app: SimulationApp, world: str):
         super().__init__('isaac_world')
         self._simulation_app = simulation_app
         # Default domain id for this simulation
         self._domain_id = 0
         # List of all robot spawner
         self._robot_spawner = []
-        # Setting up scene
-        if stage_path:
-            self._simulation_context = SimulationContext(stage_units_in_meters=1.0)
+        # Load stage from world name
+        self.get_logger().info(f"Load world: {world}")
+        if stage_path := WORLD_NAME_MAP.get(world, ''):
             # Locate assets root folder to load sample
-            assets_root_path = nucleus.get_assets_root_path()
+            assets_root_path = get_assets_root_path()
             if assets_root_path is None:
                 carb.log_error("Could not find Isaac Sim assets folder")
                 raise IsaacWorldError (-1, "Could not find Isaac Sim assets folder")
+            usd_path = assets_root_path + stage_path
+            # Load stage from package
+            #package_directory = get_package_share_directory("nanosaur_worlds")
+            #usd_path = os.path.join(package_directory, "worlds", stage_path)
+            # Load stage
+            get_context().open_stage(usd_path, None)
+            # Save stage in temporary file
+            self._tmp_file = "/tmp/isaac_sim_stage.usd"
+            get_context().save_as_stage(self._tmp_file)
+            # Open stage
+            get_context().open_stage(self._tmp_file, None)
             # Loading the simple_room environment
-            stage.add_reference_to_stage(assets_root_path + stage_path, BACKGROUND_STAGE_PATH)
+            # stage.add_reference_to_stage(assets_root_path + stage_path, BACKGROUND_STAGE_PATH)
+            self.get_logger().info(f"Loading stage {stage_path} ...")
+            while is_stage_loading():
+                simulation_app.update()
+            self.get_logger().info("Loading Complete")
+            # Create simulation context
+            self._simulation_context = SimulationContext(stage_units_in_meters=1.0)
         else:
             self._simulation_context = World(stage_units_in_meters=1.0)
             self._simulation_context.scene.add_default_ground_plane()
-            # need to initialize physics getting any articulation..etc
-            # NOT NEEDED ANYMORE FROM 4.5.0
-            # self._simulation_context.initialize_physics()
         # Build clock graph
         try:
             build_clock_graph()
@@ -229,6 +252,10 @@ class IsaacWorld(Node):
         return self
     
     def __exit__(self, exc_type, exc_value, traceback):
+        # Remove temporary urdf file
+        if os.path.exists(self._tmp_file):
+            self.get_logger().info(f"Remove temporary file: {self._tmp_file}")
+            os.remove(self._tmp_file)
         # Cleanup
         self._simulation_context.stop()
         # Destroy the node explicitly
@@ -263,10 +290,10 @@ class IsaacWorld(Node):
         return response
 
 
-def ros_bridge_main(simulation_app: SimulationApp):
+def ros_bridge_main(simulation_app: SimulationApp, world: str):
     rclpy.init()
     # Start Isaac World controller
-    with IsaacWorld(simulation_app) as isaac_world:
+    with IsaacWorld(simulation_app, world) as isaac_world:
         with contextlib.suppress(KeyboardInterrupt, SystemExit):
             isaac_world.simulate()
     rclpy.shutdown()

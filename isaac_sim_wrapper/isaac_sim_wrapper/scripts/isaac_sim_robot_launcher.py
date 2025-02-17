@@ -118,6 +118,12 @@ def main():
         help="Enable live streaming"
     )
 
+    parser.add_argument(
+        "--world",
+        type=str,
+        default="empty",
+    )
+
     # Parse the arguments
     args = parser.parse_args()
     # Load Isaac Sim with ROS 2 extension enabled
@@ -126,7 +132,7 @@ def main():
     import isaac_world
     # Start ros 2 Isaac World controller
     try:
-        isaac_world.ros_bridge_main(simulation_app)
+        isaac_world.ros_bridge_main(simulation_app, args.world)
     except isaac_world.IsaacWorldError as e:
         print(f"Error: {e.message}. Got {e.value}")
     # Shutdown simulation
