@@ -38,7 +38,7 @@ class PluginMecanumDrive:
                  node : Node, 
                  simulation_app : SimulationApp,
                  domain_id: int,
-                 robot_name: str,
+                 robot_path: str,
                  child_frame_id: str = "child_frame_id",
                  front_left_joint: str = "front_left_joint",
                  front_right_joint: str = "front_right_joint",
@@ -59,7 +59,7 @@ class PluginMecanumDrive:
         self._node = node
         self._simulation_app = simulation_app
         self._domain_id = domain_id
-        self._robot_name = robot_name
+        self._robot_path = robot_path
         # https://github.com/Road-Balance/RB_WheeledRobotExample/blob/main/RBWheeledRobotExample_python/WheeledRobotSummitO3WheelROS2/robotnik_summit.py
         # https://www.youtube.com/watch?v=XEri32NaLYk
 
@@ -89,8 +89,8 @@ class PluginMecanumDrive:
         self._back_left_joint = back_left_joint
         self._back_right_joint = back_right_joint
         # Graph path
-        self._graph_path = f"/{self._robot_name}/ROS_MecanumDriveGraph"
-        self._targetPrim = f"/{self._robot_name}/{self._child_frame_id}"
+        self._graph_path = f"{self._robot_path}/ROS_MecanumDriveGraph"
+        self._targetPrim = f"{self._robot_path}/{self._child_frame_id}"
         # Control values
         self._linear_gain = linear_gain
         self._angular_gain = angular_gain
@@ -101,7 +101,7 @@ class PluginMecanumDrive:
         # Publish odometry
         self._publish_odom = publish_odom
         # Loading camera
-        node.get_logger().info(f"MecanumDrive: {self._robot_name} - Graph: {self._graph_path}")
+        node.get_logger().info(f"MecanumDrive: {self._robot_path} - Graph: {self._graph_path}")
         node.get_logger().info(f"MecanumDrive: wheelbase: {wheelbase} - wheel_separation: {wheel_separation} - wheel_radius: {wheel_radius}")
         node.get_logger().info(f"MecanumDrive: Target Prim {self._targetPrim}")
 
@@ -110,7 +110,7 @@ class PluginMecanumDrive:
                  node : Node, 
                  simulation_app : SimulationApp,
                  domain_id: int,
-                 robot_name: str,
+                 robot_path: str,
                  plugin_data: str):
         # Extract all values from urdf data
         class_data = {
@@ -132,7 +132,7 @@ class PluginMecanumDrive:
             'namespace': plugin_data.findtext("name_space", ""),
         }
         # Pass the required parameters along with the extracted optional data to the class constructor
-        return cls(node, simulation_app, domain_id, robot_name, **class_data)
+        return cls(node, simulation_app, domain_id, robot_path, **class_data)
 
     def load_mecanum_drive(self):
         # Build action graph

@@ -133,6 +133,12 @@ class IsaacRobotSpawner(Node):
         # Find robot name
         # Extract the content of the 'name' attribute
         self._robot_name = root.get("name")
+        robot_path = self._find_path_by_name(self._robot_name)
+        if robot_path:
+            self.get_logger().info(f"Object found at: {robot_path}")
+        else:
+            self.get_logger().info("Object not found")
+
         # Find all <isaacsim> elements where contain definitions of sensors and controllers
         isaacsim_sections = root.findall("isaacsim")
         # Print each <robot> section
@@ -149,7 +155,7 @@ class IsaacRobotSpawner(Node):
                 sensor_type = sensor_tag.attrib.get("type", None)
                 # Load sensors
                 if sensor_type == 'camera':
-                    camera = CameraGraph.from_urdf(self, self._simulation_app, self._domain_id, self._robot_name, camera_counter, sensor_tag)
+                    camera = CameraGraph.from_urdf(self, self._simulation_app, self._domain_id, robot_path, camera_counter, sensor_tag)
                     camera.load_camera()
                     # Increase camera counter
                     camera_counter += 1
@@ -164,10 +170,10 @@ class IsaacRobotSpawner(Node):
                 plugin_name = plugin.attrib.get("name", None)
                 # Load all plugins
                 if plugin_name == "JointStatePublisher":
-                    joint_state = PluginJointStatePublisher.from_urdf(self, self._simulation_app, self._domain_id, self._robot_name, root, plugin)
+                    joint_state = PluginJointStatePublisher.from_urdf(self, self._simulation_app, self._domain_id, robot_path, root, plugin)
                     joint_state.load_joint_state()
                 elif plugin_name == "MecanumDrive":
-                    mecanum_drive = PluginMecanumDrive.from_urdf(self, self._simulation_app, self._domain_id, self._robot_name, plugin)
+                    mecanum_drive = PluginMecanumDrive.from_urdf(self, self._simulation_app, self._domain_id, robot_path, plugin)
                     mecanum_drive.load_mecanum_drive()
                 else:
                     self.get_logger().info(f"Plugin: {plugin_name}")
@@ -176,6 +182,13 @@ class IsaacRobotSpawner(Node):
             os.remove(temp_path_local_urdf_file)
         # Set robot_loaded to true if robot is spawned on Isaac Sim
         self._robot_loaded = True
+
+    def _find_path_by_name(self, name):
+        stage = get_context().get_stage()
+        for prim in stage.Traverse():
+            if prim.GetName() == name:
+                return prim.GetPath().pathString
+        return None
 
     def robot_name(self):
         return self._robot_name

@@ -37,13 +37,13 @@ from pxr import Gf, UsdGeom
 
 class CameraGraph:
 
-    def __init__(self, node : Node, simulation_app : SimulationApp, domain_id: int, robot_name: str, number_camera: int, namespace: str = "", camera_name: str = "camera", camera_frame: str = "frame", camera_optical_frame: str = "optical_frame", resolution: tuple[int, int] = None, visible: bool = True):
+    def __init__(self, node : Node, simulation_app : SimulationApp, domain_id: int, robot_path: str, number_camera: int, namespace: str = "", camera_name: str = "camera", camera_frame: str = "frame", camera_optical_frame: str = "optical_frame", resolution: tuple[int, int] = None, visible: bool = True):
         if resolution is None:
             resolution = [640, 480]
         self._node = node
         self._simulation_app = simulation_app
         self._domain_id = domain_id
-        self._robot_name = robot_name
+        self._robot_path = robot_path
         self._camera_name = camera_name
         # status camera on Isaac Sim
         self._visible = visible
@@ -54,12 +54,12 @@ class CameraGraph:
         # Path camera
         self._camera_frame = f"{camera_name}_{camera_frame}"
         self._camera_optical_frame = f"{camera_name}_{camera_optical_frame}"
-        self._camera_stage_path = f"/{robot_name}/{self._camera_optical_frame}/camera_rgb"
+        self._camera_stage_path = f"{robot_path}/{self._camera_optical_frame}/camera_rgb"
         # If namespace is not empty add a slash
         root_topic = f"/{namespace}" if namespace else namespace
         self._camera_topic = f"{root_topic}/{camera_name}"
         # Graph path
-        self._graph_path = f"/{self._robot_name}/ROS_CameraGraph_{self._camera_name}"
+        self._graph_path = f"{self._robot_path}/ROS_CameraGraph_{self._camera_name}"
         # Loading camera
         node.get_logger().info(f"Camera name: {self._camera_name} - camera topic:{self._camera_topic} - Graph: {self._graph_path}")
 
@@ -68,7 +68,7 @@ class CameraGraph:
                   node : Node, 
                   simulation_app: SimulationApp,
                   domain_id: int,
-                  robot_name: str,
+                  robot_path: str,
                   number_camera: int,
                   file_path: str):
         with open(file_path, 'r') as file:
@@ -76,14 +76,14 @@ class CameraGraph:
         # Extract the data for the class using its name as the key, defaulting to an empty dictionary
         class_data = config_data.get(cls.__name__, {})
         # Pass the required parameters along with the extracted optional data to the class constructor
-        return cls(node, simulation_app, domain_id, robot_name, number_camera, **class_data)
+        return cls(node, simulation_app, domain_id, robot_path, number_camera, **class_data)
 
     @classmethod
     def from_urdf(cls,
                   node : Node, 
                   simulation_app: SimulationApp,
                   domain_id: int,
-                  robot_name: str,
+                  robot_path: str,
                   number_camera: int,
                   urdf_sensor: str):
         # Parse the nested <camera> elements
@@ -103,7 +103,7 @@ class CameraGraph:
             'visible': urdf_sensor.findtext("visualize", "true").lower() == "true"
         }
         # Pass the required parameters along with the extracted optional data to the class constructor
-        return cls(node, simulation_app, domain_id, robot_name, number_camera, **class_data)
+        return cls(node, simulation_app, domain_id, robot_path, number_camera, **class_data)
 
     def load_camera(self):
         # Creating a Camera prim
