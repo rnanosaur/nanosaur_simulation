@@ -24,61 +24,25 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
+import re
 import yaml
 from pathlib import Path
 
 from ament_index_python.packages import get_package_share_directory, get_package_prefix
 from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch import LaunchDescription, LaunchContext
-from launch_ros.actions import Node
 from launch.actions import IncludeLaunchDescription, SetEnvironmentVariable
 from launch.substitutions import LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
-class Coordinate:
-    
-    def safe_list_get(self, l, idx, default=0.0):
-        try:
-            return str(l[idx])
-        except IndexError:
-            return str(default)
+PATTERN_COMMAND = re.compile(r'(\w+):=\s*(\[[^\]]+\]|".+?"|\S+)')
 
-    def __init__(self, config={}) -> None:
-        position = config.get('xyz', [])
-        orientation = config.get('RPY', [])
-        self.x = self.safe_list_get(position, 0)
-        self.y = self.safe_list_get(position, 1)
-        self.z = self.safe_list_get(position, 2)
-        self.R = self.safe_list_get(orientation, 0)
-        self.P = self.safe_list_get(orientation, 1)
-        self.Y = self.safe_list_get(orientation, 2)
-        
-    def __repr__(self) -> str:
-        coordinate = f"xyz=[{self.x} {self.y} {self.z}] RPY=[{self.R} {self.P} {self.Y}]"
-        return coordinate
-
-
-def load_robot_position(config, world_file_name):
-    # Extract worldfile name from configuration
-    world_name = Path(world_file_name).stem
-    # Check fi file exist
-    if not os.path.isfile(config):
-        print("no file available")
-        return Coordinate()
-    # Load yml file
-    with open(config, "r") as stream:
-        try:
-            robot_config = yaml.safe_load(stream)
-        except yaml.YAMLError as exc:
-            print(exc)
-            return Coordinate()
-    # Check if world exist
-    if world_name not in robot_config:
-        return Coordinate()
-    # load position and orientation
-    config = robot_config[world_name]
-    # Extract configuration 
-    return Coordinate(config)
+def docker_decoder():
+    print("[WARNING] Docker environment detected.")
+    commands = os.environ['SIMULATION_COMMANDS']
+    commands_dict = {match.group(1): match.group(2) for match in PATTERN_COMMAND.finditer(commands)}
+    print(f"Parsed commands: {commands_dict}")
+    return commands_dict
 
 
 def launch_gazebo_setup(context: LaunchContext, support_world, support_headless):
@@ -89,17 +53,16 @@ def launch_gazebo_setup(context: LaunchContext, support_world, support_headless)
     package_gazebo = get_package_share_directory('nanosaur_gazebo')
     package_worlds = get_package_share_directory('nanosaur_worlds')
     # render namespace, dumping the support_package.
-    world_name = f'{context.perform_substitution(support_world)}.sdf'
+    world = context.perform_substitution(support_world)
     headless = context.perform_substitution(support_headless).lower() == 'true'
-    # The environment variable SIMULATION_HEADLESS is used to set the headless mode
-    # of Gazebo. If the variable is set to true, Gazebo will run in headless mode.
-    # This variable override the headless argument passed to the launch file.
-    if 'SIMULATION_HEADLESS' in os.environ:
-        print("Environment variable SIMULATION_HEADLESS is set to true. Running in headless mode.")
-        headless = os.getenv('SIMULATION_HEADLESS', 'false').lower() == 'true'
+    # This variable override the argument passed to the launch file, designed only when start from docker
+    if 'SIMULATION_COMMANDS' in os.environ:
+        commands_dict = docker_decoder()
+        world = commands_dict.get("world", 'empty')
+        headless = commands_dict.get("headless", 'false').lower() == 'true'
     
+    basic_world = os.path.join(package_worlds, "worlds", f'{world}.sdf')
     gui_config = os.path.join(package_gazebo, "gui", "gui.config")
-    basic_world = os.path.join(package_worlds, "worlds", world_name)
     
     gz_args = f'-r -v 3 {basic_world}  --gui-config {gui_config}'
     if headless:

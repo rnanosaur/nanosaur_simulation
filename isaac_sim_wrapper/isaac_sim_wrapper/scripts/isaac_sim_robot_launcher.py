@@ -121,7 +121,7 @@ def main():
     parser.add_argument(
         "--world",
         type=str,
-        default="empty",
+        default="",
     )
 
     # Parse the arguments

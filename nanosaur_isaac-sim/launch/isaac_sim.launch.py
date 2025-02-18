@@ -24,6 +24,7 @@
 # EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
+import re
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription, LaunchContext
@@ -32,6 +33,7 @@ from launch.substitutions import LaunchConfiguration
 from launch.substitutions import LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 
+PATTERN_COMMAND = re.compile(r'(\w+):=\s*(\[[^\]]+\]|".+?"|\S+)')
 
 # Convert name to stage path
 WORLD_NAME_MAP = {
@@ -40,6 +42,28 @@ WORLD_NAME_MAP = {
     "office": "/Isaac/Environments/Office/office.usd",
     "warehouse": "/Isaac/Environments/Simple_Warehouse/warehouse.usd",
 }
+
+
+
+def docker_decoder():
+    print("[WARNING] Docker environment detected.")
+    commands = os.environ['SIMULATION_COMMANDS']
+    commands_dict = {match.group(1): match.group(2) for match in PATTERN_COMMAND.finditer(commands)}
+    print(f"Parsed commands: {commands_dict}")
+    # Override the simulation livestream configuration
+    livestream = commands_dict.get('headless', 'false').lower() != 'true'
+    print(f"Docker environment detected. Livestream is set to {livestream}.")
+    
+    if 'isaac_sim_path' in commands_dict:
+        del commands_dict['isaac_sim_path']
+    
+    commands_dict['livestream'] = str(livestream).lower()
+    # Override the simulation headless configuration
+    commands_dict['headless'] = 'true'
+    # rewrite world name
+    commands_dict['world'] = WORLD_NAME_MAP.get(commands_dict['world'], "empty")
+
+    return commands_dict
 
 
 def launch_setup(context: LaunchContext, support_world, support_isaac_sim_path, support_config_file_path, support_renderer, support_headless, support_livestream):
@@ -52,37 +76,27 @@ def launch_setup(context: LaunchContext, support_world, support_isaac_sim_path, 
     renderer = context.perform_substitution(support_renderer)
     headless = context.perform_substitution(support_headless).lower() == 'true'
     livestream = context.perform_substitution(support_livestream).lower() == 'true'
-    # Check if the environment variable SIMULATION_IN_DOCKER is set
-    # This variable overrides the livestream argument passed to the launch file
-    if 'SIMULATION_IN_DOCKER' in os.environ:
-        print("[WARNING] Docker environment detected.")
-        # Headless mode is forced to true in Docker
-        headless = True
-        livestream = True
-        if 'SIMULATION_HEADLESS' in os.environ:
-            livestream = os.getenv('SIMULATION_HEADLESS', 'false').lower() != 'true'
-        print(f"Docker environment detected. Livestream is set to {livestream}.")
-        
+
+    simulation_config = {
+        'world': WORLD_NAME_MAP.get(world_name, "empty"),
+        'isaac_sim_path': isaac_sim_path,
+        'config_file_path': config_file_path,
+        'renderer': renderer,
+        'headless': str(headless).lower(),
+        'livestream': str(livestream).lower(),
+    }
+
     if 'SIMULATION_COMMANDS' in os.environ:
-        print("[INFO] Simulation commands detected.")
-        print(f"Simulation commands: {os.getenv('SIMULATION_COMMANDS')}")
-    
-    world = WORLD_NAME_MAP.get(world_name, "empty")
+        # Use default values if some settings are not defined
+        simulation_config |= docker_decoder()
 
     isaac_sim_launcher = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             [os.path.join(package_isaac_sim, 'launch'), '/isaac_sim_server.launch.py']
             ),
-            launch_arguments={
-                'world': world,
-                'isaac_sim_path': isaac_sim_path,
-                'config_file_path': config_file_path,
-                'renderer': renderer,
-                'headless': str(headless).lower(),
-                'livestream': str(livestream).lower(),
-                }.items(),
+            launch_arguments=simulation_config.items(),
     )
-    
+
     return [isaac_sim_launcher]
 
 

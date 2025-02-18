@@ -52,6 +52,8 @@ def launch_setup(context: LaunchContext, support_world, support_isaac_sim_path, 
         exit(1)
 
     print(f"Run Isaac Sim {version_content} from {isaac_sim_path} in {renderer} mode with headless={headless}")
+    if world_name:
+        print(f"Load world: {world_name}")
     # Path Launcher Isaac Sim
     isaac_sim_wrapper_launcher = os.path.join(package_isaac_sim, "scripts", "isaac_sim_robot_launcher.py")
     # Check if the version is less than 4.5.0
@@ -61,11 +63,13 @@ def launch_setup(context: LaunchContext, support_world, support_isaac_sim_path, 
         isaac_sim_wrapper_launcher = os.path.join(package_isaac_sim, "scripts", "old_version", "isaac_sim_robot_launcher.py")
 
     # Command to start Isaac Sim
-    command = [f"{isaac_sim_path}/python.sh", isaac_sim_wrapper_launcher, "--renderer", renderer, "--world", world_name]
+    command = [f"{isaac_sim_path}/python.sh", isaac_sim_wrapper_launcher, "--renderer", renderer]
     if headless:
         command += ["--headless"]
     if livestream:
         command += ["--livestream"]
+    if world_name:
+        command += ["--world", world_name]
     # Add the configuration file if it exists
     if config_file_path:
         print(f"Load configuration file {config_file_path}")

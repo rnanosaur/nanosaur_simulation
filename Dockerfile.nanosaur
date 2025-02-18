@@ -58,4 +58,4 @@ STOPSIGNAL SIGINT
 # Set the entrypoint
 ENTRYPOINT ["/entrypoint.sh"]
 # Set the default command to launch the ROS2 launch file
-CMD ["ros2", "launch", "nanosaur_gazebo", "nanosaur_bridge.launch.py"]
+CMD ["ros2", "launch", "nanosaur_simulation", "nanosaur_bringup.launch.py"]
