@@ -61,7 +61,8 @@ def docker_decoder():
     # Override the simulation headless configuration
     commands_dict['headless'] = 'true'
     # rewrite world name
-    commands_dict['world'] = WORLD_NAME_MAP.get(commands_dict['world'], "empty")
+    world = commands_dict.get('world', 'empty')
+    commands_dict['world'] = WORLD_NAME_MAP[world]
 
     return commands_dict
 
